@@ -9,13 +9,11 @@ library(broom)
 library(formattable)
 library(purrr)
 
-###########
-
 ###############################################################
 # Natural lands inventory
 ###############################################################
 
-# read in data. file decriptions above each file.
+# read in data. file descriptions above each file.
 
 # carbon value table from CARB
 carbon_vals <- read.csv(here::here("files", "luts", "lut_lf_carb.csv"), encoding = "UTF-8")
@@ -351,7 +349,6 @@ write_csv(ag_acreage_19, here::here("files", "results", "ag_final_19.csv"))
 # For ease of use, here are the most important outputs:
 
 ci_summary_cat_16 #this is the full carbon inventory for 2016: contains acreage, soil carbon, aboveground carbon, and NO for all categories
-ci_summary_nocat_16 # just totals (same as in above table)
 
 # save the inventory
 write_csv(ci_summary_cat_16, here::here("files", "results", "inventory_16.csv"))
