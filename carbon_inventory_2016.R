@@ -56,6 +56,10 @@ precombin_df <- merge(lf_evc_16, lf_evh_16, by = "OBJECTID")
 
 # combine all three (EVC, EVH, EVT) landfire dataframes for 2016, and clean
 
+lf_reclass_n <- read.csv(here::here("files", "luts", "lf_reclass_nitrogen.csv"), encoding = "UTF-8") %>% 
+  clean_names() %>% 
+  rename(classnames_evt = x_u_feff_evt)
+
 combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>% 
   select(OBJECTID, pointid, CLASSNAMES.x, CLASSNAMES.y, EVT_NAME,  Reclass_16) %>% 
   clean_names("snake") %>% 
@@ -65,7 +69,8 @@ combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>%
   left_join(evh_lut, by = "classnames_evh") %>% 
   left_join(evc_lut, by = "classnames_evc") %>% 
   left_join(evt_lut, by = "classnames_evt") %>% 
-  mutate(grouped = paste(evt_group, evh_group, evc_group, sep = ""))
+  mutate(grouped = paste(evt_group, evh_group, evc_group, sep = "")) %>% 
+  left_join(lf_reclass_n, by = "classnames_evt")
 
 # remove NAs
 
@@ -342,16 +347,16 @@ ag_acreage_19 <- total_tables[[2]]
 
 # write ag info to csvs to use for next phase of project
 
-write_csv(ag_acreage_12, here::here("files", "results", "ag_final_12.csv"))
-write_csv(ag_acreage_16, here::here("files", "results", "ag_final_16.csv"))
-write_csv(ag_acreage_19, here::here("files", "results", "ag_final_19.csv"))
+write_csv(ag_acreage_12, here::here("results", "ag_final_12.csv"))
+write_csv(ag_acreage_16, here::here("results", "ag_final_16.csv"))
+write_csv(ag_acreage_19, here::here("results", "ag_final_19.csv"))
 
 # For ease of use, here are the most important outputs:
 
 ci_summary_cat_16 #this is the full carbon inventory for 2016: contains acreage, soil carbon, aboveground carbon, and NO for all categories
 
 # save the inventory
-write_csv(ci_summary_cat_16, here::here("files", "results", "inventory_16.csv"))
+write_csv(ci_summary_cat_16, here::here("results", "inventory_16.csv"))
 
 # these are only calag data - no landfire - will use in next step (baseline calculation)
 ag_acreage_12

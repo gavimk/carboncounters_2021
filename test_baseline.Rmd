@@ -30,12 +30,12 @@ library(broom)
 ```{r}
 # Read in data files and clean up, created in carbon inventory script. These files contain # of acres of each ag class according to calag (no landfire)
 
-ag_12 <- read_csv(here::here("files", "results", "ag_final_12.csv")) %>% 
+ag_12 <- read_csv(here::here("results", "ag_final_12.csv")) %>% 
   select(! c(pixels, sqmeter))
-ag_16 <- read_csv(here::here("files", "results", "ag_final_16.csv")) %>% 
+ag_16 <- read_csv(here::here("results", "ag_final_16.csv")) %>% 
   clean_names()
 ag_16 <- ag_16[, c(1, 6, 2:5, 7)]
-ag_19 <- read_csv(here::here("files", "results", "ag_final_19.csv")) %>% 
+ag_19 <- read_csv(here::here("results", "ag_final_19.csv")) %>% 
   select(! c(pixels, sqmeter))
 
 colnames <- c("class", "acres","abvg_c", "soil_c", "no_emit", "net", "year")
@@ -167,4 +167,40 @@ ggplot() +
        y = "fodder acres")
 
 ```
+try as a loop???
+```{r}
 
+# ACREAGE
+# Next we will build models to fit a linear regression to each crop category along with total ag acreage
+
+ag_names <- all_ag_df %>% 
+  select(2:36)
+
+
+
+res_list <- vector("list", length = length(names)) %>% 
+  setNames(ag_names)
+
+# Total Acres
+for (name in names) {
+lm_total_acre_loop <- lm([[name]] ~ year, data = all_ag_df)
+lm_total_acre_tidy_loop <- broom::tidy(lm_total_acre_loop)
+
+# Now we will use these models to predict acreage (total and per crop type) in 2030
+
+# Next, we'll predict values for these years using our model
+# Total acres
+predict_total_run_loop <- predict(lm_total_acre, newdata = predict_df_30_acres)
+predict_total_df_loop <- data.frame(predict_df_30_acres, predict_total_run_loop)
+predict_total_df_loop <- predict_total_df_loop
+
+# and plot it
+# These plots compare real data to the regression
+plot[[name]] <- ggplot() + 
+  geom_point(data = all_ag_df, aes(x = year, y = acres_total)) +
+  geom_line(data = predict_total_df, aes(x = year, y = total_acres_pred)) +
+  theme_minimal() + 
+  labs(x = "year",
+       y = print[[name]])
+}
+```
