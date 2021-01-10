@@ -70,21 +70,23 @@ combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>%
   left_join(evc_lut, by = "classnames_evc") %>% 
   left_join(evt_lut, by = "classnames_evt") %>% 
   mutate(grouped = paste(evt_group, evh_group, evc_group, sep = "")) %>% 
-  left_join(lf_reclass_n, by = "classnames_evt")
+  left_join(lf_reclass_n, by = "classnames_evt") %>% 
+  select(-reclass_16) %>% 
+  rename(reclass_16 = reclass_category)
 
-# remove NAs
+# remove NAs - code no longer needed, updated csv's reflect that we updated groups that showed up as NA
 
-is_na <- combined_lf_df %>% 
-  filter(is.na(evt_group)) %>% 
-  select(classnames_evt)
+# is_na <- combined_lf_df %>% 
+#   filter(is.na(evt_group)) %>% 
+#   select(classnames_evt)
 
 # find missing values
 
-is_na_unique <- unique(is_na$classnames_evt)
+# is_na_unique <- unique(is_na$classnames_evt)
 
 # make dataframe of missing values - COME BACK TO THIS
 
-is_na_unique <- data.frame(is_na_unique)
+# is_na_unique <- data.frame(is_na_unique)
 # write_csv(is_na_unique, here::here("files", "natlands", "missing_classnames_evt.csv"))
 
 # missing_names_evt <- read.csv(here::here("files", "natlands", "missing_classnames_evt.csv"))
@@ -106,18 +108,27 @@ ag_2016 <- ag_2016_raw %>%
   mutate(nitrogen = as.character(nitrogen)) %>% 
   mutate(nitrogen = ifelse(ag_class == "Barren / Fallow" | ag_class == "Greenhouse", 0, nitrogen)) %>% 
   mutate(ag_class = ifelse(ag_class == "Irrigated Pasture",  "Fodder", as.character(ag_class))) %>% 
-  mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class)))
+  mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class))) %>% 
+  mutate(source = ifelse(is.na(ag_class), "landfire", "calag"))
 
 # merge natural lands with ag, replace grouped name with ag classification where appropriate
 
 combined_ag_natland <- merge(combined_lf_df, ag_2016, by = "pointid") %>%
   mutate(ag_class = as.character(ag_class)) %>% 
+  mutate(lf_n_category = as.character(lf_n_category)) %>% 
   mutate(grouped = ifelse(is.na(ag_class), grouped, ag_class)) %>% 
-  mutate(reclass_cat = ifelse(is.na(ag_class), reclass_16, ag_class)) %>% 
-  select(evt_group, pointid, reclass_cat, grouped, nitrogen) %>% 
+  mutate(reclass_cat = ifelse(is.na(ag_class), as.character(reclass_16), as.character(ag_class))) %>%
+  mutate(reclass_cat = as.character(reclass_cat)) %>% 
+  mutate(reclass_cat = ifelse(reclass_cat == "Barren / Fallow",  "Fallow", as.character(reclass_cat))) %>% 
+  select(evt_group, pointid, reclass_cat, grouped, nitrogen, lf_n_category, source) %>% 
   rename(nitrogen_cat = nitrogen) %>% 
-  mutate(reclass_cat = ifelse(reclass_cat == "Wetland",  "Riparian/Wetland", as.character(reclass_cat)))
-  
+  mutate(reclass_cat = ifelse(reclass_cat == "Wetland",  "Riparian/Wetland", as.character(reclass_cat))) %>% 
+  mutate(nitrogen_cat = ifelse(lf_n_category != "", as.character(lf_n_category), as.character(nitrogen_cat)))
+
+# simplified file to use in GIS
+reclass_map_file <- combined_ag_natland %>% 
+  select(pointid, reclass_cat)
+
 # calculate stored carbon and nitrous oxide emissions for each pixel (900 sq m)
 
 ag_natland_carbon_n_16 <- combined_ag_natland %>% 
@@ -143,7 +154,7 @@ all_c_n_soil <- merge(ag_natland_carbon_n_16, soil, by = "pointid") %>%
 # okay...let's see if we can make a nice table somehow
 
 all_clean_16_no_tree <- all_c_n_soil %>% 
-  select(reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix)
+  select(reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix, source)
 
 # total_abvg_c_16 <- comma(sum(all_clean_16_no_tree$stock_abvgc_mtco2e_pixel, na.rm = TRUE))
 # 
@@ -165,7 +176,18 @@ all_acreages_16 <- all_clean_16_no_tree %>%
   select(! c(pixels, sqmeter)) %>% 
   adorn_totals()
 
+#create a summary (this is the inventory! yay!)
 ci_summary_cat_16 <- all_clean_16_no_tree %>%
+  select(!source) %>% 
+  group_by(reclass_cat) %>%
+  summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
+  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
+  merge(all_acreages_16, by = "reclass_cat")
+
+# another summary without landfire ag points to use for baseline
+summary_merge <- all_clean_16_no_tree %>%
+  filter(source == "calag") %>% 
+  select(!source) %>% 
   group_by(reclass_cat) %>%
   summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
   mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
@@ -176,7 +198,7 @@ ci_summary_cat_16 <- all_clean_16_no_tree %>%
 
 # calculate same but filter for just ag to use for baseline projection (I know this is clunky, it's bc of how adorn_total works)
 # *NOTE* - do we want the LANDFIRE "Agriculture" category in here? In 2012 and 2019? I think we decided to not use it for baseline?
-ag_acreage_16 <- ci_summary_cat_16 %>%
+ag_acreage_16 <- summary_merge %>%
   filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Vineyard", "Greenhouse")) %>% 
   adorn_totals() %>% 
   mutate(year = '2016')
@@ -345,12 +367,6 @@ total_tables <- lapply(res_list, fx_df) %>%
 ag_acreage_12 <- total_tables[[1]]
 ag_acreage_19 <- total_tables[[2]]
 
-# write ag info to csvs to use for next phase of project
-
-write_csv(ag_acreage_12, here::here("results", "ag_final_12.csv"))
-write_csv(ag_acreage_16, here::here("results", "ag_final_16.csv"))
-write_csv(ag_acreage_19, here::here("results", "ag_final_19.csv"))
-
 # For ease of use, here are the most important outputs:
 
 ci_summary_cat_16 #this is the full carbon inventory for 2016: contains acreage, soil carbon, aboveground carbon, and NO for all categories
@@ -362,6 +378,17 @@ write_csv(ci_summary_cat_16, here::here("results", "inventory_16.csv"))
 ag_acreage_12
 ag_acreage_16
 ag_acreage_19
+
+# write ag info to csvs to use for next phase of project
+
+write_csv(ag_acreage_12, here::here("results", "ag_final_12.csv"))
+write_csv(ag_acreage_16, here::here("results", "ag_final_16.csv"))
+write_csv(ag_acreage_19, here::here("results", "ag_final_19.csv"))
+
+# write GIS file
+
+write_csv(reclass_map_file, here::here("results", "reclass_map_file.csv"))
+
 
           
           

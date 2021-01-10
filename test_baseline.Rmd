@@ -167,40 +167,63 @@ ggplot() +
        y = "fodder acres")
 
 ```
-try as a loop???
+okay, let's try to automate this now...
+
 ```{r}
 
 # ACREAGE
 # Next we will build models to fit a linear regression to each crop category along with total ag acreage
 
-ag_names <- all_ag_df %>% 
+select_ag <- all_ag_df %>% 
   select(2:36)
 
+ag_names <- colnames(select_ag)
 
-
-res_list <- vector("list", length = length(names)) %>% 
+res_list_plots <- vector("list", length = length(ag_names)) %>% 
   setNames(ag_names)
 
-# Total Acres
-for (name in names) {
-lm_total_acre_loop <- lm([[name]] ~ year, data = all_ag_df)
-lm_total_acre_tidy_loop <- broom::tidy(lm_total_acre_loop)
+# first, linear regressions
+
+fx_lm <- function(name) {
+
+  lm_loop <- lm(all_ag_df[[name]] ~ year, data = all_ag_df)
+  
+}
+
+all_lms <- lapply(ag_names, fx_lm) %>% 
+  setNames(ag_names)
+
+all_lms[[1]] # cool
 
 # Now we will use these models to predict acreage (total and per crop type) in 2030
 
-# Next, we'll predict values for these years using our model
-# Total acres
-predict_total_run_loop <- predict(lm_total_acre, newdata = predict_df_30_acres)
-predict_total_df_loop <- data.frame(predict_df_30_acres, predict_total_run_loop)
-predict_total_df_loop <- predict_total_df_loop
+fx_predict <- function(lm) {
+  
+  predict_run_loop <- predict(lm, newdata = predict_df_30_acres)
+  predict_df_loop <- data.frame(predict_df_30_acres, predict_run_loop)
+  predict_df_loop <- predict_df_loop
+  
+}
 
-# and plot it
+looped_predict_dfs <- lapply(all_lms, fx_predict) %>% 
+  setNames(ag_names)
+
+looped_predict_dfs[[1]] # great
+
 # These plots compare real data to the regression
-plot[[name]] <- ggplot() + 
-  geom_point(data = all_ag_df, aes(x = year, y = acres_total)) +
-  geom_line(data = predict_total_df, aes(x = year, y = total_acres_pred)) +
+
+for (name in ag_names) {
+  plot <- print(ggplot() + 
+  geom_point(data = all_ag_df, aes(x = year, y = all_ag_df[[name]])) +
+  geom_line(data = looped_predict_dfs[[name]], aes(x = year, y = predict_run_loop)) +
   theme_minimal() + 
   labs(x = "year",
-       y = print[[name]])
+       y = paste(name)))
+  
 }
+
+res_list_plots[[name]] <- plot
+
 ```
+
+
