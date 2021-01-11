@@ -210,7 +210,7 @@ ag_acreage_16 <- summary_merge %>%
 tree_num <- 114.8730627
 
 # This may need to be hard coded - need to double check this cell reference is correct 
-urban_acres <- all_acreages_16[3, 2]
+urban_acres <- all_acreages_16[2, 2]
  
 tree_row <-data.frame("Urban Forestry (Aboveground Only)", tree_num*urban_acres, 0, 0, tree_num*urban_acres, 0)
 names(tree_row)<-c("reclass_cat", "stock_abvgc_mtco2e_pixel_sum", "stock_soilc_mtco2e_pix_sum", "emit_no_mtco2e_pix_sum", "net", "acreage")
