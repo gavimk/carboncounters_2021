@@ -226,4 +226,19 @@ res_list_plots[[name]] <- plot
 
 ```
 
+```{r}
+
+#create big dataframe of all predicted values (same units), easier for doing visualizations
+
+#first, change column names
+for(name in ag_names){
+  
+  colnames(looped_predict_dfs[[name]]) <- c("year", name)
+  
+}
+
+#merge dataframes, common column = year
+all_predict_df<- looped_predict_dfs %>% 
+  reduce(full_join, by = "year")
+```
 
