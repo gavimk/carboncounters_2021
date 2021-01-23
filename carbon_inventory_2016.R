@@ -123,6 +123,7 @@ combined_ag_natland <- merge(combined_lf_df, ag_2016, by = "pointid") %>%
   select(evt_group, pointid, reclass_cat, grouped, nitrogen, lf_n_category, source) %>% 
   rename(nitrogen_cat = nitrogen) %>% 
   mutate(reclass_cat = ifelse(reclass_cat == "Wetland",  "Riparian/Wetland", as.character(reclass_cat))) %>% 
+  mutate(reclass_cat = ifelse(reclass_cat == "Irrigated Pasture",  "Fodder", as.character(reclass_cat))) %>% 
   mutate(nitrogen_cat = ifelse(lf_n_category != "", as.character(lf_n_category), as.character(nitrogen_cat)))
 
 # simplified file to use in GIS
@@ -216,6 +217,9 @@ tree_row <-data.frame("Urban Forestry (Aboveground Only)", tree_num*urban_acres,
 names(tree_row)<-c("reclass_cat", "stock_abvgc_mtco2e_pixel_sum", "stock_soilc_mtco2e_pix_sum", "emit_no_mtco2e_pix_sum", "net", "acreage")
 
 ci_summary_cat_16 <- rbind(ci_summary_cat_16, tree_row) %>% 
+  mutate(reclass_cat = ifelse(reclass_cat == "Urban Forestry (Aboveground Only)", "Developed", reclass_cat)) %>% 
+  group_by(reclass_cat) %>% 
+  summarise_all(sum) %>% 
   adorn_totals()
 
 # easier to rename columns after merges are done!
@@ -231,12 +235,12 @@ ag_2019 <- ag_2019_raw %>%
   select(!c(organic, crop_list)) %>% 
   rename(nitrogen = nitrogren_) %>% 
   clean_names("snake") %>% 
-  rename(pointid = objectid) %>% 
   mutate(ag_class = as.character(ag_class)) %>% 
   mutate(nitrogen = as.character(nitrogen)) %>% 
   mutate(nitrogen = ifelse(ag_class == "Barren / Fallow" | ag_class == "Greenhouse", 0, nitrogen)) %>% 
   mutate(ag_class = ifelse(ag_class == "Irrigated Pasture",  "Fodder", as.character(ag_class))) %>% 
-  mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class)))
+  mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class))) %>% 
+  rename(pointid = objectid)
 
 ag_2012_raw <- read.csv(here::here("files", "ag", "ag_2012.csv"), encoding = "UTF-8", na.strings=c(""," ", "NoData", "NA"))
 

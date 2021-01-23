@@ -43,3 +43,6 @@ files/
 
 # csv for GIS map update
 results/reclass_map_file.csv
+
+# Ag classifications folder
+ag_classifications/
