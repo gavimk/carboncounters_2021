@@ -23,12 +23,13 @@ library(kableExtra)
 library(effsize)
 library(stargazer)
 library(broom)
+library(plotly)
 
 ```
 
 
 ```{r}
-# Read in data files and clean up, created in carbon inventory script. These files contain # of acres of each ag class according to calag (no landfire)
+# Read in data files and clean up, created in carbon inventory script. These files contain # of acres of each ag class according to calag (no landfire). 
 
 ag_12 <- read_csv(here::here("results", "ag_final_12.csv")) %>% 
   select(! c(pixels, sqmeter))
@@ -38,143 +39,57 @@ ag_16 <- ag_16[, c(1, 6, 2:5, 7)]
 ag_19 <- read_csv(here::here("results", "ag_final_19.csv")) %>% 
   select(! c(pixels, sqmeter))
 
-colnames <- c("class", "acres","abvg_c", "soil_c", "no_emit", "net", "year")
+colnames <- c("class", "acres","abvgc", "soilc", "noemit", "net", "year")
 colnames(ag_12) = colnames
 colnames(ag_16) = colnames
 colnames(ag_19) = colnames
+
+#Add in rangeland values from cal ag
+
+# First, use carbon inventory to get average carbon values per acre
+inventory <- read_csv(here("results", "inventory_16.csv")) %>% 
+  clean_names
+
+shrub_grass <- inventory %>% 
+  filter(landcover_classification %in% c("Grassland","Shrubland")) %>% 
+  mutate(soil_avg = total_soil_carbon_mtco2e/acres) %>% 
+  mutate(abvg_avg = total_aboveground_carbon_mt_co2e/acres)
+  
+avg_soil_rangel <- weighted.mean(shrub_grass$soil_avg, shrub_grass$acres)
+avg_abvg_rangel <- weighted.mean(shrub_grass$abvg_avg, shrub_grass$acres)
+
+# crop report #s https://countyofsb.org/agcomm/cropReportArchive.sbc
+
+range_acre_19 <- 573678
+range_acre_12 <- 584125
+range_acre_16 <- 586047
+
+range_data <- data.frame(class = "Rangeland", "acres" = c(range_acre_12, range_acre_16, range_acre_19), "abvgc" = 0, "soilc" = 0, "noemit" = 0, "net" = 0, "year" = c(2012, 2016, 2019)) %>% 
+  mutate(abvgc = avg_abvg_rangel*acres) %>% 
+  mutate(soilc = avg_soil_rangel*acres) %>% 
+  mutate(net = abvgc+soilc)
 
 # make big dataframe to make calculations easier
 
 all_ag_df <- rbind(ag_12, ag_16) %>% 
   rbind(ag_19) %>% 
+  rbind(range_data) %>% 
+  filter(class != "Total") 
+
+all_ag_df_wide <- all_ag_df %>% 
   pivot_wider(names_from = class,
-              values_from = c(acres, abvg_c, soil_c, no_emit, net)) %>% 
+              values_from = c(acres, abvgc, soilc, noemit, net)) %>% 
   clean_names()
 
 ```
 
-```{r}
-
-# ACREAGE
-# Next we will build models to fit a linear regression to each crop category along with total ag acreage
-
-# Total Acres
-
-lm_total_acre <- lm(acres_total ~ year, data = all_ag_df)
-lm_total_acre_tidy <- broom::tidy(lm_total_acre)
-  
-# Annual Row Crops
-
-lm_annual_row <- lm(acres_row_crop ~ year, data = all_ag_df)
-lm_annual_row_tidy <- broom::tidy(lm_annual_row)
-
-# Orchard
-
-lm_orchard <- lm(acres_orchard ~ year, data = all_ag_df)
-lm_orchard_tidy <- broom::tidy(lm_orchard)
-
-# Vineyard
-
-lm_vineyard<- lm(acres_vineyard ~ year, data = all_ag_df)
-lm_vineyard_tidy <- broom::tidy(lm_vineyard)
-
-# Fodder crops
-
-lm_fodder <- lm(acres_fodder ~ year, data = all_ag_df)
-lm_fodder_tidy <- broom::tidy(lm_fodder)
-```
-
-```{r}
-# Now we will use these models to predict acreage (total and per crop type) in 2030
-
-# First, we'll make a data frame of years out to 2030
-predict_df_30_acres <- data.frame(year = c(2012, 2016, 2019, 2030))
-
-# Next, we'll predict values for these years using our model
-# Total acres
-predict_total_run <- predict(lm_total_acre, newdata = predict_df_30_acres)
-predict_total_df <- data.frame(predict_df_30_acres, predict_total_run)
-predict_total_df <- predict_total_df %>% 
-  rename("total_acres_pred" = predict_total_run)
-
-# Annual row crops
-predict_annual_run <- predict(lm_annual_row, newdata = predict_df_30_acres)
-predict_annual_df <- data.frame(predict_df_30_acres, predict_annual_run)
-predict_annual_df
-predict_annual_df <- predict_annual_df %>% 
-  rename("annual_row_pred" = predict_annual_run)
-
-# Orchard 
-predict_orchard_run <- predict(lm_orchard, newdata = predict_df_30_acres)
-predict_orchard_df <- data.frame(predict_df_30_acres, predict_orchard_run)
-predict_orchard_df
-predict_orchard_df <- predict_orchard_df %>% 
-  rename("orchard_pred" = predict_orchard_run)
-
-# Vineyard 
-predict_vineyard_run <- predict(lm_vineyard, newdata = predict_df_30_acres)
-predict_vineyard_df <- data.frame(predict_df_30_acres, predict_vineyard_run)
-predict_vineyard_df
-predict_vineyard_df <- predict_vineyard_df %>% 
-  rename("vineyard_pred" = predict_vineyard_run)
-
-# fodder
-predict_fodder_run <- predict(lm_fodder, newdata = predict_df_30_acres)
-predict_fodder_df <- data.frame(predict_df_30_acres, predict_fodder_run)
-predict_fodder_df
-predict_fodder_df <- predict_fodder_df %>% 
-  rename("fodder_pred" = predict_fodder_run)
-
-```
-
-```{r}
-# Let's make some plots
-
-# These plots compare real data to the regression
-ggplot() + 
-  geom_point(data = all_ag_df, aes(x = year, y = acres_total)) +
-  geom_line(data = predict_total_df, aes(x = year, y = total_acres_pred)) +
-  theme_minimal() + 
-  labs(x = "year",
-       y = "total ag acres")
-
-ggplot() + 
-  geom_point(data = all_ag_df, aes(x = year, y = acres_row_crop)) +
-  geom_line(data = predict_annual_df, aes(x = year, y = annual_row_pred)) +
-  theme_minimal() + 
-  labs(x = "year",
-       y = "annual row crop acres")
-
-ggplot() + 
-  geom_point(data = all_ag_df, aes(x = year, y = acres_orchard)) +
-  geom_line(data = predict_orchard_df, aes(x = year, y = orchard_pred)) +
-  theme_minimal() + 
-  labs(x = "year",
-       y = "orchard acres")
-
-ggplot() + 
-  geom_point(data = all_ag_df, aes(x = year, y = acres_vineyard)) +
-  geom_line(data = predict_vineyard_df, aes(x = year, y = vineyard_pred)) +
-  theme_minimal() + 
-  labs(x = "year",
-       y = "vineyard acres")
-
-ggplot() + 
-  geom_point(data = all_ag_df, aes(x = year, y = acres_fodder)) +
-  geom_line(data = predict_fodder_df, aes(x = year, y = fodder_pred)) +
-    theme_minimal() + 
-    labs(x = "year",
-       y = "fodder acres")
-
-```
-okay, let's try to automate this now...
 
 ```{r}
 
 # ACREAGE
 # Next we will build models to fit a linear regression to each crop category along with total ag acreage
 
-select_ag <- all_ag_df %>% 
+select_ag <- all_ag_df_wide %>% 
   select(2:36)
 
 ag_names <- colnames(select_ag)
@@ -186,7 +101,7 @@ res_list_plots <- vector("list", length = length(ag_names)) %>%
 
 fx_lm <- function(name) {
 
-  lm_loop <- lm(all_ag_df[[name]] ~ year, data = all_ag_df)
+  lm_loop <- lm(all_ag_df_wide[[name]] ~ year, data = all_ag_df_wide)
   
 }
 
@@ -214,7 +129,7 @@ looped_predict_dfs[[1]] # great
 
 for (name in ag_names) {
   plot <- print(ggplot() + 
-  geom_point(data = all_ag_df, aes(x = year, y = all_ag_df[[name]])) +
+  geom_point(data = all_ag_df_wide, aes(x = year, y = all_ag_df_wide[[name]])) +
   geom_line(data = looped_predict_dfs[[name]], aes(x = year, y = predict_run_loop)) +
   theme_minimal() + 
   labs(x = "year",
@@ -223,6 +138,8 @@ for (name in ag_names) {
 }
 
 res_list_plots[[name]] <- plot
+
+res_list_plots
 
 ```
 
@@ -237,8 +154,38 @@ for(name in ag_names){
   
 }
 
-#merge dataframes, common column = year
+# merge dataframes, common column = year
 all_predict_df<- looped_predict_dfs %>% 
   reduce(full_join, by = "year")
+
+# make this dataframe tidy
+tidy_predict_df <- all_predict_df %>% 
+  pivot_longer(!year,
+               names_to = c("variable", "land_class"),
+               names_sep = "_",
+               values_to = "value")
+
+```
+
+Plotting results
+
+```{r}
+
+# Making some plots
+
+# facet wrap easy plot
+ggplot(data = tidy_predict_df, aes(x = year, y = value, group = land_class))+
+  geom_line(aes(color = land_class))+
+  theme_minimal()+
+  facet_wrap(~variable, scales = "free_y")
+
+acres_graph <- ggplot(data =  subset(tidy_predict_df, variable == "acres"), aes(x = year, y = value, group = land_class))+
+  geom_line(aes(color = land_class))+
+  theme_minimal()+
+  stat_summary(fun.y = sum, na.rm = TRUE, group = 3, color = 'black', geom ='line', label = "total")
+
+ggplotly(acres_graph)
+
+
 ```
 

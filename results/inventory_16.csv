@@ -1,4 +1,4 @@
-reclass_cat,stock_abvgc_mtco2e_pixel_sum,stock_soilc_mtco2e_pix_sum,emit_no_mtco2e_pix_sum,net,acreage
+Landcover Classification,Total Aboveground Carbon (MT CO2e),Total Soil Carbon (MTCO2e),Total NO Emissions (MT CO2e),"Total Net, Stocks Minus Emissions (MTCO2e)",Acres
 Barren,0,328982.56185276,0,328982.56185276,22169.97776130467
 Developed,17148904.784379005,3611201.1517308606,0,20760105.936109867,74642.84655300222
 Fallow,7286.087699999998,471815.42006420996,10.565468327348158,479090.94229588256,10115.715344699778
