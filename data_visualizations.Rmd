@@ -1,0 +1,22 @@
+---
+title: "data_visualizations"
+author: "Alicia Fennell"
+date: "1/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# Attach packages
+library(tidyverse)
+library(tidyr)
+library(here)
+library(janitor)
+library(plotly)
+library(kableExtra)
+library(effsize)
+library(stargazer)
+library(broom)
+library(plotly)
+```
