@@ -86,7 +86,10 @@ all_ag_df_wide <- all_ag_df %>%
 
 ```{r}
 
-# ACREAGE
+## First, we'll make a data frame of years out to 2030
+ 
+predict_df_30_acres <- data.frame(year = c(2012, 2016, 2019, 2030))
+
 # Next we will build models to fit a linear regression to each crop category along with total ag acreage
 
 select_ag <- all_ag_df_wide %>% 
@@ -165,6 +168,39 @@ tidy_predict_df <- all_predict_df %>%
                names_sep = "_",
                values_to = "value")
 
+# add totals
+totals_predict <- tidy_predict_df %>% 
+  group_by(variable, year) %>% 
+  summarise(value = sum(value)) %>% 
+  mutate(land_class = "total_allclasses") %>% 
+  relocate(year, variable, land_class, value)
+
+# put it together
+final_predict_df <- bind_rows(tidy_predict_df, totals_predict)
+
+# save as csv
+write_csv(final_predict_df, here("results", "all_predictions.csv"))
+
+# do the same for observed values
+
+tidy_observed <- all_ag_df %>% 
+  pivot_longer(cols = 2:6,
+               names_to = "variable",
+               values_to = "value") %>% 
+  rename(land_class = class) %>% 
+  relocate(year, variable, land_class, value)
+
+totals_observed <- tidy_observed %>% 
+  group_by(variable, year) %>% 
+  summarise(value = sum(value)) %>% 
+  mutate(land_class = "total_allclasses") %>% 
+  relocate(year, variable, land_class, value)
+
+final_observed_df <- bind_rows(tidy_observed, totals_observed)
+
+write_csv(final_predict_df, here("results", "all_ag_observations.csv"))
+
+
 ```
 
 Plotting results
@@ -174,17 +210,18 @@ Plotting results
 # Making some plots
 
 # facet wrap easy plot
-ggplot(data = tidy_predict_df, aes(x = year, y = value, group = land_class))+
-  geom_line(aes(color = land_class))+
-  theme_minimal()+
-  facet_wrap(~variable, scales = "free_y")
 
-acres_graph <- ggplot(data =  subset(tidy_predict_df, variable == "acres"), aes(x = year, y = value, group = land_class))+
-  geom_line(aes(color = land_class))+
-  theme_minimal()+
-  stat_summary(fun.y = sum, na.rm = TRUE, group = 3, color = 'black', geom ='line', label = "total")
+# ggplot(data = tidy_predict_df, aes(x = year, y = value, group = land_class))+
+  # geom_line(aes(color = land_class))+
+  # theme_minimal()+
+  # facet_wrap(~variable, scales = "free_y")
 
-ggplotly(acres_graph)
+# acres_graph <- ggplot(data =  subset(tidy_predict_df, variable == "acres"), aes(x = year, y = value, group = land_class))+
+  # geom_line(aes(color = land_class))+
+  # theme_minimal()+
+  # stat_summary(fun.y = sum, na.rm = TRUE, group = 3, color = 'black', geom ='line', label = "total")
+
+# ggplotly(acres_graph)
 
 
 ```
