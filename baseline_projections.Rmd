@@ -200,10 +200,6 @@ final_observed_df <- bind_rows(tidy_observed, totals_observed)
 
 write_csv(final_predict_df, here("results", "all_ag_observations.csv"))
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 049b7be1cf4d90fc964462a3bd44b432f85a0ccc
 ```
 
 Plotting results
