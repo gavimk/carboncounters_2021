@@ -1,0 +1,42 @@
+---
+title: "Initial Visualization"
+author: "Minnie Ringland"
+date: "1/26/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(janitor)
+library(here)
+
+```
+
+```{r}
+
+coefficients <- read_csv("coefficients - hsp - Combined.csv") %>% 
+  clean_names()
+
+```
+## Plotting
+
+```{r}
+ggplot(coefficients) +
+  geom_point(aes(x=practice,y=x25_co2eq_2016, color=crop)) +
+  theme(legend.position = "none")
+```
+
+## 2016 100% implementation
+```{r}
+hundo_p <- coefficients %>% 
+  group_by(crop) %>% 
+  summarize(carbon2016 = sum(x100_co2eq_2016), carbon2030 = sum(x100_co2eq_2030))
+
+ggplot(hundo_p) +
+  geom_col(aes(x=crop,y=carbon2016),fill="blue") +
+  geom_col(aes(x=crop,y=carbon2030),fill="green") #+
+  #theme(legend.position = "none")
+```
+
