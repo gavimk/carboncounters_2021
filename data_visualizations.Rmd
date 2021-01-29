@@ -20,3 +20,14 @@ library(stargazer)
 library(broom)
 library(plotly)
 ```
+
+
+```{r}
+## Ag projections 
+
+ag_observations <- read_csv(here("results", "all_ag_observations.csv"))
+
+ag_predictions <- read_csv(here("results", "all_predictions.csv"))
+
+```
+
