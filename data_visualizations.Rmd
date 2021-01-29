@@ -23,11 +23,51 @@ library(plotly)
 
 
 ```{r}
-## Ag projections 
+## Read in ag observations and projections 
 
 ag_observations <- read_csv(here("results", "all_ag_observations.csv"))
+ag_predictions <- read_csv(here("results", "all_predictions.csv")) 
 
-ag_predictions <- read_csv(here("results", "all_predictions.csv"))
+## pie chart for composition of land in 2030 and line graph showing percent change 
+
+## Attempting pie chart, starting with bar chart 
+
+ag_acres_30 <- ag_predictions %>% 
+  filter(variable == "acres") %>% 
+  filter(year == "2030") %>% 
+  filter(land_class != "total_allclasses")
+
+pred_bar <- ggplot(data = ag_acres_30, aes(x="", y=value, fill=land_class))+
+geom_bar(width = 1, stat = "identity")
+
+pred_bar
+
+pred_pie <- pred_bar + coord_polar("y", start=0)
+
+pred_pie
 
 ```
+
+```{r}
+## change over time
+
+## 
+ggplot(data = tidy_predict_df, aes(x = year, y = value, group = variable))+
+geom_line(aes(color = variable))+
+theme_minimal()+
+facet_wrap(~land_class, scales = "free_y")
+
+## 
+ggplot(data = tidy_predict_df, aes(x = year, y = value, group = land_class))+
+geom_line(aes(color = land_class))+
+theme_minimal()+
+facet_wrap(~variable, scales = "free_y")
+
+## only acres and net 
+ggplot(data = subset(tidy_predict_df, variable %in% c("acres", "net")), aes(x = year, y = value, group = land_class))+
+geom_line(aes(color = land_class))+
+theme_minimal()+
+facet_wrap(~variable, scales = "free_y")
+```
+
 
