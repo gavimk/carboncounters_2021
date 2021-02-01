@@ -200,6 +200,10 @@ final_observed_df <- bind_rows(tidy_observed, totals_observed)
 
 write_csv(final_predict_df, here("results", "all_ag_observations.csv"))
 
+write_csv(all_predict_df, here("results", "predictions_wide.csv"))
+
+write_csv(all_ag_df_wide, here("results", "observed_wide.csv"))
+
 ```
 
 Plotting results
@@ -210,10 +214,23 @@ Plotting results
 
 # facet wrap easy plot
 
-# ggplot(data = tidy_predict_df, aes(x = year, y = value, group = land_class))+
-  # geom_line(aes(color = land_class))+
-  # theme_minimal()+
-  # facet_wrap(~variable, scales = "free_y")
+## group by variable, wrapped by land class
+ggplot(data = tidy_predict_df, aes(x = year, y = value, group = variable))+
+geom_line(aes(color = variable))+
+theme_minimal()+
+facet_wrap(~land_class, scales = "free_y")
+
+## grouped by land class, wrapped by variable 
+ggplot(data = tidy_predict_df, aes(x = year, y = value, group = land_class))+
+geom_line(aes(color = land_class))+
+theme_minimal()+
+facet_wrap(~variable, scales = "free_y")
+
+## only acres and net carbon
+ggplot(data = subset(tidy_predict_df, variable %in% c("acres", "net")), aes(x = year, y = value, group = land_class))+
+geom_line(aes(color = land_class))+
+theme_minimal()+
+facet_wrap(~variable, scales = "free_y")
 
 # acres_graph <- ggplot(data =  subset(tidy_predict_df, variable == "acres"), aes(x = year, y = value, group = land_class))+
   # geom_line(aes(color = land_class))+
