@@ -19,4 +19,143 @@ library(effsize)
 library(stargazer)
 library(broom)
 library(plotly)
+library(gg.gap)
+library(tidyverse)
+library(viridis)
+library(hrbrthemes)
+library(mapdata)
+library(ggmap)
+library(sf)
+library(tmap)
+library(RColorBrewer)
+library(maptools)
+library(raster)
 ```
+
+```{r}
+# mapping?
+
+point_coords <- read_csv(here("files", "mapping", "point_coords.csv"))
+
+values <- read_csv(here("results", "all_points_values.csv")) %>% 
+  dplyr::select(1, 3, 11, 16, 12) %>% 
+  replace(is.na(.), 0) %>% 
+  mutate(net = (stock_soilc_mtco2e_pix + stock_abvgc_mtco2e_pixel - emit_no_mtco2e_pix))
+
+all_coord_vals <- merge(point_coords, values, by = "pointid") %>% 
+  dplyr::select(!c(2,3))
+
+landcover_data <- all_coord_vals %>% 
+  dplyr::select(lat, lon, reclass_cat)
+
+# %>% 
+#   st_as_sf(coords = c("lon","lat"))
+
+#st_crs(landcover_data) = 102245
+
+# 102245
+
+landcover_raster <- rasterize(landcover_data)
+
+county_outline <- read_sf(here("files", "mapping", "sb_county.shp"))
+
+# heat map of net carbon storage
+ggplot(all_coord_vals, aes(x=lon, y=lat, z = net, color = net)) + 
+  stat_summary_hex() +
+  theme_void() +
+  scale_fill_distiller(palette = "YlGn", trans = "reverse") +
+  labs(fill = "") +
+  theme(text = element_text(family = "Palatino"))
+ggsave(here("files", "figs", "heatmap_net.png"))
+  
+#scale_color_manual(brewer.pal="YlOrRd", direction=-1)
+
+colourCount = length(unique(landcover_data$reclass_cat))
+getPalette = colorRampPalette(brewer.pal(12, "Set3"))
+
+# attempt landcover map
+
+ggplot(data = landcover_data) +
+  geom_sf(aes(fill = reclass_cat)) +
+  theme_void() +
+  scale_fill_manual(values = getPalette(colourCount))
+
+ggplot()+
+  geom_sf(data = sf_map, size = 0.1, color = "darkgray")+
+  geom_sf(data = all_trees_spatial, aes (color = spp_common), size = .1)+
+  theme_void()
+
+
+#   geom_sf(data = blackwood_acacia_sp, 
+#           color = "red", 
+#           size = 0.5) +
+#   theme_void() +
+#   labs(title = "Blackwood acacias in San Francisco")
+# 
+# ggplot() + 
+#   geom_sf(data = all_coord_vals, aes(x = lon, y = lat, fill = reclass_cat)) +
+#   scale_fill_brewer(palette = "Set3")
+#   
+  
+    # ggplot2::annotate("text", x = -27, y = 72, label="Where people tweet about #Surf", colour = "black", size=5, alpha=1, hjust=0) +
+    # ggplot2::annotate("segment", x = -27, xend = 10, y = 70, yend = 70, colour = "black", size=0.2, alpha=1) +
+  #   theme_void() +
+  #   #xlim(-30, 70) +
+  #   #ylim(24, 72) +
+  #   scale_fill_viridis(
+  # option="B",
+  # trans = "log",
+  # breaks = c(1,7,54,403,3000),
+  # name="net mt co2e",
+  # guide = guide_legend( keyheight = unit(2.5, units = "mm"), keywidth=unit(10, units = "mm"), label.position = "bottom", title.position = 'top', nrow=1)
+  #  )  +
+  #   ggtitle( "" ) +
+  #   theme(
+  #     legend.position = c(0.8, 0.09),
+  #     legend.title=element_text(color="black", size=8),
+  #     text = element_text(color = "#22211d"),
+  #     plot.background = element_rect(fill = "#f5f5f2", color = NA), 
+  #     panel.background = element_rect(fill = "#f5f5f2", color = NA), 
+  #     legend.background = element_rect(fill = "#f5f5f2", color = NA),
+  #     plot.title = element_text(size= 13, hjust=0.1, color = "#4e4d47", margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")),
+  #   ) 
+
+```
+
+
+
+```{r}
+
+# Visualize impacts of carbon and nitrogen coefficients for management practices
+
+cp_coeff_df_raw <- read_csv(here("cometplanner", "coefficients - hsp - Combined.csv"))
+
+cp_coeff_df <- cp_coeff_df_raw %>% 
+  clean_names() %>% 
+  mutate(no = as.numeric(no)) %>% 
+  select(2,3,6,7) %>% 
+  pivot_longer(cols = c(3,4),
+               names_to = "variable",
+               values_to = "value") %>% 
+  mutate(practice = str_extract(practice, "\\(.*?\\)")) %>% 
+  group_by(crop, variable) %>% 
+  filter(!duplicated(practice)) %>% 
+  filter(crop != "Orchard")
+  
+plots <- ggplot(cp_coeff_df, aes(x = practice, y = value, fill = crop, group = crop)) +
+  geom_col(position="dodge", width = .3) +
+  theme_minimal() + 
+  # facet_wrap(~ crop, nrow = 1) +
+  theme(panel.spacing = unit(0, "lines")) +
+  theme(panel.grid = element_line(color = "gray90"))
+
+plots
+
+gg.gap(plot=plots,
+       segments=c(8.5,17.5),
+       ylim=c(-2,20))
+
+  #coord_flip()
+
+```
+
