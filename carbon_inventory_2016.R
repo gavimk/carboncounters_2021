@@ -395,6 +395,9 @@ write_csv(ag_acreage_19, here::here("results", "ag_final_19.csv"))
 
 write_csv(reclass_map_file, here::here("results", "reclass_map_file.csv"))
 
+# for mapping in R
+write_csv(all_clean_16_no_tree, here("results", "all_points_values.csv"))
+
 
           
           
