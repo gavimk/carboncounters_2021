@@ -32,8 +32,21 @@ library(tmap)
 library(RColorBrewer)
 library(maptools)
 library(raster)
+<<<<<<< HEAD
 library(unikn)
 library(treemapify)
+=======
+library(scales)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(forcats)
+library(scales)
+library(waffle)
+library(magrittr)
+library(hrbrthemes)
+library(lubridate)
+>>>>>>> 331fd9099db1e819a5e4e28777382f95edfe89a0
 ```
 
 ```{r}
@@ -127,7 +140,7 @@ ggsave(here("files", "figs", "heatmap_net.png"))
 
 ```
 
-
+# ALICIA BELOW
 
 ```{r}
 
@@ -320,3 +333,129 @@ ggsave(here("files", "figs", "lineplotsrange.jpg"))
 
 ```
 
+<<<<<<< HEAD
+=======
+
+```{r}
+## Pie chart attempts
+#Read in ag observations and projections 
+
+ag_observations <- read_csv(here("results", "all_ag_observations.csv"))
+ag_predictions <- read_csv(here("results", "all_predictions.csv")) 
+
+## pie chart for composition of land in 2030 and line graph showing percent change 
+## Attempting pie chart, starting with bar chart 
+
+ag_acres_30 <- ag_predictions %>% 
+  filter(variable == "acres") %>% 
+  filter(year == "2030") %>% 
+  mutate(percent = value / 745176.317) %>% 
+  filter(land_class != "total_allclasses") %>% 
+  mutate(across(is.numeric, ~ round(., 4))) %>% 
+  mutate(percent_dis = c("2.18%", "6.23%", "0.46%", "2.25%", "8.28%", "5.26%", "75.34%"))
+
+pred_bar <- ggplot(data = ag_acres_30, 
+                   aes(x="", 
+                       y= percent, 
+                      fill= land_class))+
+geom_bar(width = 1, stat = "identity")
+
+pred_bar
+
+blank_theme <- theme_minimal()+
+  theme(
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  panel.border = element_blank(),
+  panel.grid=element_blank(),
+  axis.ticks = element_blank(),
+  plot.title=element_text(size=14, face="bold")
+  )
+
+## bar chart to pie chart 
+pred_pie <- pred_bar + coord_polar("y", start=45) +
+  theme_minimal() +
+  scale_fill_manual(values=c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "darkolivegreen3", "green4", "purple4")) +
+  blank_theme +
+  guides(fill = guide_legend(title = "Land Classification")) +
+  geom_label_repel(aes(label = percent_dis), size=3, show.legend = F, nudge_x = 1)
+
+pred_pie
+
+```
+
+
+```{r}
+## waffle plotting 
+
+acre_pct_30 <- c("Fallow"=2.18,
+                 "Fodder"=6.23,
+                 "Orchard"=2.25, 
+                 "Row Crops"=8.28, 
+                 "Vineyard"=5.26,
+                "Rangeland"=75.34)
+
+waffle(acre_pct_30 *2, rows=10, size=0.6,  
+       colors=c("lightsteelblue", "goldenrod", "darkred", "green4", "purple4", "darkolivegreen3"),  
+       title="2030 Working Lands by Land Classification",
+       xlab="1 square = 0.5% of working lands") 
+
+# ggplot(data = ag_acres_30) +
+#   geom_waffle(aes(fill = land_class, 
+#            values = percent)) +
+#   scale_fill_manual(
+#     values=c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "darkolivegreen3", "green4", "purple4"),
+#     labels = c("Fruit", "Sammich", "Pizza", "test", "testag", "woo", "last")
+#   ) +
+#   coord_equal() +
+#   theme_ipsum_rc(grid="") +
+#   theme_enhance_waffle()
+# 
+# 
+# waffle(ag_acres_30, rows=7, size=0.5, 
+#        colors=c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "darkolivegreen3", "green4", "purple4"), 
+#        title="Average Household Savings Each Year", 
+#        xlab="1 square == $392")
+```
+
+
+```{r}
+## Acreage change over time
+## read in wide data 
+pred_wide <- read_csv(here("results", "predictions_wide.csv")) 
+
+## trying to make a dataframe to have percent change over time of ag acreage 
+acres_predict <- final_predict_df %>% 
+  filter(year %in% c(2012, 2030)) %>% 
+  filter(variable == "acres") %>% 
+  group_by(land_class) %>% 
+  mutate(year = year(year)) %>% 
+  mutate(pct_change = (value - lag(value))/lag(value))
+
+## just rangelands
+# ggplot(data = pred_wide)+
+#   geom_line(aes(x = year, y = acres_rangeland))+
+#   geom_line(aes(x = year, y = net_rangeland))
+#   theme_minimal()
+
+## 
+ggplot(data = tidy_predict_df, aes(x = year, y = value, group = variable))+
+  geom_line(aes(color = variable))+
+  theme_minimal()+
+  facet_wrap(~land_class, scales = "free_y")
+
+## 
+ggplot(data = tidy_predict_df, aes(x = year, y = value, group = land_class))+ 
+  geom_line(aes(color = land_class))+
+  theme_minimal()+ 
+  facet_wrap(~variable, scales = "free_y")
+
+## only acres and net 
+ggplot(data = subset(tidy_predict_df, variable %in% c("acres", "net")), aes(x = year, y = value, group = land_class))+
+  geom_line(aes(color = land_class))+
+  theme_minimal()+
+  facet_wrap(~variable, scales = "free_y")
+```
+
+
+>>>>>>> 331fd9099db1e819a5e4e28777382f95edfe89a0
