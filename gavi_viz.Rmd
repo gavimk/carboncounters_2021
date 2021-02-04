@@ -41,6 +41,18 @@ library(waffle)
 library(magrittr)
 library(hrbrthemes)
 library(lubridate)
+library(scales)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(forcats)
+library(scales)
+library(waffle)
+library(magrittr)
+library(hrbrthemes)
+library(lubridate)
+library(rgdal)
+library(raster)
 ```
 
 ```{r}
@@ -58,10 +70,15 @@ all_coord_vals <- merge(point_coords, values, by = "pointid") %>%
   mutate(total_stock = stock_soilc_mtco2e_pix + stock_abvgc_mtco2e_pixel)
 
 landcover_data <- all_coord_vals %>% 
-  dplyr::select(lat, lon, reclass_cat)
+  dplyr::select(lat, lon, reclass_cat) %>% 
+  st_as_sf(coords = c("lon","lat"))
 
-# %>% 
-#   st_as_sf(coords = c("lon","lat"))
+landcover_df <- as.data.frame(landcover_data, xy = TRUE)
+
+ggplot() +
+     geom_sf(data = landcover_df, aes(fill = reclass_cat))
+
+plot(landcover_data, aes(fill = reclass_cat)) %>% 
 
 #st_crs(landcover_data) = 102245
 
@@ -173,17 +190,6 @@ ggsave(here("files", "figs", "heatmap_net.png"))
 
 ```{r}
 
-library(scales)
-library(dplyr)
-library(ggplot2)
-library(ggrepel)
-library(forcats)
-library(scales)
-library(waffle)
-library(magrittr)
-library(hrbrthemes)
-library(lubridate)
-
 af_colors <- c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "green4", "purple4")
 
 ## Acreage change over time
@@ -212,33 +218,33 @@ bar_together <- rbind(bar_30, bar_everything_else) %>%
   
 ## make the graph - probably don't use
 # ggplot() +
-  geom_line(data = pct_change, aes(x = year, y = pct_change, group = land_class, color = land_class), size = 1) +
-  theme_light() +
-  scale_color_brewer(palette = "Set3", direction = -1)
+  # geom_line(data = pct_change, aes(x = year, y = pct_change, group = land_class, color = land_class), size = 1) +
+  # theme_light() +
+  # scale_color_brewer(palette = "Set3", direction = -1)
   
 ## set colors
 
 # colors <- usecol("pal_unikn_light", n = 8)
 
 ## bar chart
-ggplot(data = bar_together, aes(fill = reorder(land_class,value), y = value, x = year)) +
-  geom_bar(stat = "identity", width = .8) +
-  scale_fill_manual(values = af_colors) +
-  theme_minimal() +
-  scale_x_discrete(expand = c(0, 0), labels = c("2012", "2016", "2019", "2030")) +
-  scale_y_continuous(expand = c(0, 0), labels = scales::comma) +
-  labs(x = "",
-       y = "",
-       fill = "Land class") +
-  facet_wrap(~variable, scales = "free_y",
-             labeller = labeller(variable = 
-    c("abvgc" = "Aboveground Carbon (MT CO2e)",
-      "acres" = "Acres",
-      "net" = "Net (MT CO2e)",
-      "noemit" = "N2O emissions (MT CO2e)",
-      "soilc" = "Soil Carbon (MT CO2e)")))
+# ggplot(data = bar_together, aes(fill = reorder(land_class,value), y = value, x = year)) +
+#   geom_bar(stat = "identity", width = .8) +
+#   scale_fill_manual(values = af_colors) +
+#   theme_minimal() +
+#   scale_x_discrete(expand = c(0, 0), labels = c("2012", "2016", "2019", "2030")) +
+#   scale_y_continuous(expand = c(0, 0), labels = scales::comma) +
+#   labs(x = "",
+#        y = "",
+#        fill = "Land class") +
+#   facet_wrap(~variable, scales = "free_y",
+#              labeller = labeller(variable = 
+#     c("abvgc" = "Aboveground Carbon (MT CO2e)",
+#       "acres" = "Acres",
+#       "net" = "Net (MT CO2e)",
+#       "noemit" = "N2O emissions (MT CO2e)",
+#       "soilc" = "Soil Carbon (MT CO2e)")))
 
-ggsave(here("files", "figs", "barplots.png"))
+# ggsave(here("files", "figs", "barplots.png"))
        
 treemap_30 <- ggplot(data = subset(acres_19_30_bar, year== 2030), aes(area = value, fill = land_class, label = land_class)) +
   geom_treemap() +
@@ -327,9 +333,6 @@ ggsave(here("files", "figs", "lineplotsrange.jpg"))
 
 ```
 
-<<<<<<< HEAD
-=======
-
 ```{r}
 ## Pie chart attempts
 #Read in ag observations and projections 
@@ -382,17 +385,17 @@ pred_pie
 ```{r}
 ## waffle plotting 
 
-acre_pct_30 <- c("Fallow"=2.18,
-                 "Fodder"=6.23,
-                 "Orchard"=2.25, 
-                 "Row Crops"=8.28, 
-                 "Vineyard"=5.26,
-                "Rangeland"=75.34)
-
-waffle(acre_pct_30 *2, rows=10, size=0.6,  
-       colors=c("lightsteelblue", "goldenrod", "darkred", "green4", "purple4", "darkolivegreen3"),  
-       title="2030 Working Lands by Land Classification",
-       xlab="1 square = 0.5% of working lands") 
+# acre_pct_30 <- c("Fallow"=2.18,
+#                  "Fodder"=6.23,
+#                  "Orchard"=2.25, 
+#                  "Row Crops"=8.28, 
+#                  "Vineyard"=5.26,
+#                 "Rangeland"=75.34)
+# 
+# waffle(acre_pct_30 *2, rows=10, size=0.6,  
+#        colors=c("lightsteelblue", "goldenrod", "darkred", "green4", "purple4", "darkolivegreen3"),  
+#        title="2030 Working Lands by Land Classification",
+#        xlab="1 square = 0.5% of working lands") 
 
 # ggplot(data = ag_acres_30) +
 #   geom_waffle(aes(fill = land_class, 
