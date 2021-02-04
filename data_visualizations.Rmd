@@ -32,10 +32,8 @@ library(tmap)
 library(RColorBrewer)
 library(maptools)
 library(raster)
-<<<<<<< HEAD
 library(unikn)
 library(treemapify)
-=======
 library(scales)
 library(dplyr)
 library(ggplot2)
@@ -46,11 +44,11 @@ library(waffle)
 library(magrittr)
 library(hrbrthemes)
 library(lubridate)
->>>>>>> 331fd9099db1e819a5e4e28777382f95edfe89a0
 ```
 
 ```{r}
-# mapping?
+# ## GK 
+## mapping?
 ag_observations <- read_csv(here("results", "all_ag_observations.csv"))
 ag_predictions <- read_csv(here("results", "all_predictions.csv")) 
 point_coords <- read_csv(here("files", "mapping", "point_coords.csv"))
@@ -333,8 +331,7 @@ ggsave(here("files", "figs", "lineplotsrange.jpg"))
 
 ```
 
-<<<<<<< HEAD
-=======
+
 
 ```{r}
 ## Pie chart attempts
@@ -387,18 +384,51 @@ pred_pie
 
 ```{r}
 ## waffle plotting 
+## waffle for acreage percentages in 2030
+acre_pct_30 <- c("Rangeland"=151,
+                 "Row Crops"=17,
+                 "Fodder"=12,
+                 "Vineyard"=11,
+                 "Orchard"=4,
+                 "Fallow"=4,
+                 "Greenhouse"=1)
 
-acre_pct_30 <- c("Fallow"=2.18,
-                 "Fodder"=6.23,
-                 "Orchard"=2.25, 
-                 "Row Crops"=8.28, 
-                 "Vineyard"=5.26,
-                "Rangeland"=75.34)
-
-waffle(acre_pct_30 *2, rows=10, size=0.6,  
-       colors=c("lightsteelblue", "goldenrod", "darkred", "green4", "purple4", "darkolivegreen3"),  
+waffle(acre_pct_30, rows=10, size=0.6,  
+       colors=c("darkolivegreen3", "green4", "goldenrod", "purple4", "darkred", "lightsteelblue", "lightslategrey"),  
        title="2030 Working Lands by Land Classification",
-       xlab="1 square = 0.5% of working lands") 
+       xlab= expression("1 square" %~~% "0.5% of working lands")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## waffle for carbon storage percentages in 2030
+carbon_pct_30 <- c("Rangeland"=166,
+                 "Row Crops"=10,
+                 "Fodder"=11,
+                 "Vineyard"=7,
+                 "Orchard"=4,
+                 "Fallow"=2,
+                 "Greenhouse"=0)
+
+waffle(carbon_pct_30, rows=10, size=0.6,  
+       colors=c("darkolivegreen3", "green4", "goldenrod", "purple4", "darkred", "lightsteelblue", "lightslategrey"),  
+       title="2030 Net Carbon by Land Classification",
+       xlab= expression("1 square" %~~% "0.5% of net carbon in working lands")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+## waffle for n2o emissions percentages in 2030
+n2o_pct_30 <- c("Rangeland"=0,
+                 "Row Crops"=133,
+                 "Fodder"=28,
+                 "Vineyard"=14,
+                 "Orchard"=25,
+                 "Fallow"=0,
+                 "Greenhouse"=0)
+
+waffle(n2o_pct_30, rows=10, size=0.6,  
+       colors=c("darkolivegreen3", "green4", "goldenrod", "purple4", "darkred", "lightsteelblue", "lightslategrey"),  
+       title="2030 N2O Emissions by Land Classification",
+       xlab= expression("1 square" %~~% "0.5% of N2O emissions from working lands")) +
+  theme(plot.title = element_text(hjust = 0.5))
+
 
 # ggplot(data = ag_acres_30) +
 #   geom_waffle(aes(fill = land_class, 
@@ -455,6 +485,18 @@ ggplot(data = subset(tidy_predict_df, variable %in% c("acres", "net")), aes(x = 
   geom_line(aes(color = land_class))+
   theme_minimal()+
   facet_wrap(~variable, scales = "free_y")
+```
+
+
+```{r}
+
+inventory_16 <- read_csv(here("results", "inventory_16.csv")) %>% 
+  clean_names()
+
+inventory_stocks <- inventory %>% 
+  mutate(total_stocks = total_soil_carbon_mtco2e + total_aboveground_carbon_mt_co2e) 
+
+
 ```
 
 
