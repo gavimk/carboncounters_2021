@@ -14,7 +14,7 @@ year,variable,land_class,value
 2012,abvgc,pastureland,0
 2012,abvgc,row,98253.73137332685
 2012,abvgc,vineyard,117704.82600972801
-2012,abvgc,rangeland,39470278.11306599
+2012,abvgc,rangeland,31896279.405670255
 2012,soilc,fallow,226377.4885165915
 2012,soilc,fodder,1039870.7412041426
 2012,soilc,greenhouse,55414.62051274907
@@ -22,7 +22,7 @@ year,variable,land_class,value
 2012,soilc,pastureland,283496.50915738195
 2012,soilc,row,4107497.4636214077
 2012,soilc,vineyard,1661620.39768783
-2012,soilc,rangeland,19705790.22914748
+2012,soilc,rangeland,22129738.080371633
 2012,noemit,fallow,2.998308579382808
 2012,noemit,fodder,965.4240907627973
 2012,noemit,greenhouse,12.64819324994869
@@ -49,7 +49,7 @@ year,variable,land_class,value
 2016,abvgc,pastureland,0
 2016,abvgc,row,92473.69769304479
 2016,abvgc,vineyard,128487.12849729694
-2016,abvgc,rangeland,39097150.01565334
+2016,abvgc,rangeland,31594751.303560436
 2016,soilc,fallow,297229.93165469915
 2016,soilc,fodder,1617033.355886817
 2016,soilc,greenhouse,60045.131731604226
@@ -57,7 +57,7 @@ year,variable,land_class,value
 2016,soilc,pastureland,213585.89295320958
 2016,soilc,row,3959336.8517597765
 2016,soilc,vineyard,1796188.6521809325
-2016,soilc,rangeland,19519503.626475155
+2016,soilc,rangeland,21920536.943188965
 2016,noemit,fallow,3.569414975455345
 2016,noemit,fodder,1386.5108550998266
 2016,noemit,greenhouse,15.057372916603981
@@ -84,7 +84,7 @@ year,variable,land_class,value
 2019,abvgc,pastureland,0
 2019,abvgc,row,88138.67243283289
 2019,abvgc,vineyard,136573.8553629741
-2019,abvgc,rangeland,38817303.94259387
+2019,abvgc,rangeland,31368605.226978034
 2019,soilc,fallow,350369.26400827616
 2019,soilc,fodder,2049905.3168988824
 2019,soilc,greenhouse,63518.015145745594
@@ -92,7 +92,7 @@ year,variable,land_class,value
 2019,soilc,pastureland,161152.9308000803
 2019,soilc,row,3848216.3928635567
 2019,soilc,vineyard,1897114.8430507705
-2019,soilc,rangeland,19379788.674470916
+2019,soilc,rangeland,21763636.090301976
 2019,noemit,fallow,3.9977447725097477
 2019,noemit,fodder,1702.3259283525986
 2019,noemit,greenhouse,16.86425766659545
@@ -119,7 +119,7 @@ year,variable,land_class,value
 2030,abvgc,pastureland,0
 2030,abvgc,row,72243.57981205638
 2030,abvgc,vineyard,166225.1872037882
-2030,abvgc,rangeland,37791201.67470908
+2030,abvgc,rangeland,30539402.946175992
 2030,soilc,fallow,545213.4826380536
 2030,soilc,fodder,3637102.507276356
 2030,soilc,greenhouse,76251.92099759681
@@ -127,7 +127,7 @@ year,variable,land_class,value
 2030,soilc,pastureland,-31101.263761386275
 2030,soilc,row,3440774.7102440596
 2030,soilc,vineyard,2267177.5429068133
-2030,soilc,rangeland,18867500.51712203
+2030,soilc,rangeland,21188332.96304965
 2030,noemit,fallow,5.568287361709224
 2030,noemit,fodder,2860.3145302794583
 2030,noemit,greenhouse,23.4895017498975
@@ -139,10 +139,10 @@ year,variable,land_class,value
 2030,net,fallow,545207.9143506959
 2030,net,fodder,3716315.853209138
 2030,net,greenhouse,76228.43149584671
-2012,abvgc,total_allclasses,40112434.19756548
-2016,abvgc,total_allclasses,39774208.89048623
-2019,abvgc,total_allclasses,39520539.91017681
-2030,abvgc,total_allclasses,38590420.31570887
+2012,abvgc,total_allclasses,32538435.49016975
+2016,abvgc,total_allclasses,32271810.17839333
+2019,abvgc,total_allclasses,32071841.194560975
+2030,abvgc,total_allclasses,31338621.587175775
 2012,acres,total_allclasses,736421.4325326062
 2016,acres,total_allclasses,738045.9697187379
 2019,acres,total_allclasses,739264.3726083362
@@ -155,7 +155,7 @@ year,variable,land_class,value
 2016,noemit,total_allclasses,21225.280617933557
 2019,noemit,total_allclasses,21086.293034618793
 2030,noemit,total_allclasses,20576.671895798103
-2012,soilc,total_allclasses,27863632.104842987
-2016,soilc,total_allclasses,28285504.400638048
-2019,soilc,total_allclasses,28601908.622484423
-2030,soilc,total_allclasses,29762057.435920957
+2012,soilc,total_allclasses,30287579.95606714
+2016,soilc,total_allclasses,30686537.717351858
+2019,soilc,total_allclasses,30985756.038315482
+2030,soilc,total_allclasses,32082889.881848577

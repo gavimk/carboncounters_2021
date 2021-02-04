@@ -50,19 +50,22 @@ colnames(ag_19) = colnames
 inventory <- read_csv(here("results", "inventory_16.csv")) %>% 
   clean_names
 
+# crop report #s https://countyofsb.org/agcomm/cropReportArchive.sbc
+range_acre_19 <- 573678
+range_acre_12 <- 584125
+range_acre_16 <- 586047
+
+range_grass <- 234716.086
+range_shrub <- 586047 - 234716.086
+range_weights <- c(range_grass, range_shrub)
+
 shrub_grass <- inventory %>% 
   filter(landcover_classification %in% c("Grassland","Shrubland")) %>% 
   mutate(soil_avg = total_soil_carbon_mtco2e/acres) %>% 
   mutate(abvg_avg = total_aboveground_carbon_mt_co2e/acres)
   
-avg_soil_rangel <- weighted.mean(shrub_grass$soil_avg, shrub_grass$acres)
-avg_abvg_rangel <- weighted.mean(shrub_grass$abvg_avg, shrub_grass$acres)
-
-# crop report #s https://countyofsb.org/agcomm/cropReportArchive.sbc
-
-range_acre_19 <- 573678
-range_acre_12 <- 584125
-range_acre_16 <- 586047
+avg_soil_rangel <- weighted.mean(shrub_grass$soil_avg, range_weights)
+avg_abvg_rangel <- weighted.mean(shrub_grass$abvg_avg, range_weights)
 
 range_data <- data.frame(class = "Rangeland", "acres" = c(range_acre_12, range_acre_16, range_acre_19), "abvgc" = 0, "soilc" = 0, "noemit" = 0, "net" = 0, "year" = c(2012, 2016, 2019)) %>% 
   mutate(abvgc = avg_abvg_rangel*acres) %>% 
