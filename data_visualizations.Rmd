@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 
+options(scipen=999)
+
 # Attach packages
 library(tidyverse)
 library(tidyr)
@@ -30,6 +32,10 @@ library(tmap)
 library(RColorBrewer)
 library(maptools)
 library(raster)
+<<<<<<< HEAD
+library(unikn)
+library(treemapify)
+=======
 library(scales)
 library(dplyr)
 library(ggplot2)
@@ -40,20 +46,22 @@ library(waffle)
 library(magrittr)
 library(hrbrthemes)
 library(lubridate)
+>>>>>>> 331fd9099db1e819a5e4e28777382f95edfe89a0
 ```
 
 ```{r}
 # mapping?
-
+ag_observations <- read_csv(here("results", "all_ag_observations.csv"))
+ag_predictions <- read_csv(here("results", "all_predictions.csv")) 
 point_coords <- read_csv(here("files", "mapping", "point_coords.csv"))
 
 values <- read_csv(here("results", "all_points_values.csv")) %>% 
-  dplyr::select(1, 3, 11, 16, 12) %>% 
   replace(is.na(.), 0) %>% 
   mutate(net = (stock_soilc_mtco2e_pix + stock_abvgc_mtco2e_pixel - emit_no_mtco2e_pix))
 
 all_coord_vals <- merge(point_coords, values, by = "pointid") %>% 
-  dplyr::select(!c(2,3))
+  dplyr::select(!c(2,3)) %>% 
+  mutate(total_stock = stock_soilc_mtco2e_pix + stock_abvgc_mtco2e_pixel)
 
 landcover_data <- all_coord_vals %>% 
   dplyr::select(lat, lon, reclass_cat)
@@ -65,35 +73,35 @@ landcover_data <- all_coord_vals %>%
 
 # 102245
 
-landcover_raster <- rasterize(landcover_data)
+#landcover_raster <- rasterize(landcover_data)
 
-county_outline <- read_sf(here("files", "mapping", "sb_county.shp"))
+# county_outline <- read_sf(here("files", "mapping", "sb_county.shp"))
 
 # heat map of net carbon storage
-ggplot(all_coord_vals, aes(x=lon, y=lat, z = net, color = net)) + 
+ggplot(all_coord_vals, aes(x=lon, y=lat, z = total_stock, color = total_stock)) + 
   stat_summary_hex() +
   theme_void() +
   scale_fill_distiller(palette = "YlGn", trans = "reverse") +
-  labs(fill = "") +
-  theme(text = element_text(family = "Palatino"))
+  labs(fill = "")
+
 ggsave(here("files", "figs", "heatmap_net.png"))
   
 #scale_color_manual(brewer.pal="YlOrRd", direction=-1)
 
-colourCount = length(unique(landcover_data$reclass_cat))
-getPalette = colorRampPalette(brewer.pal(12, "Set3"))
-
-# attempt landcover map
-
-ggplot(data = landcover_data) +
-  geom_sf(aes(fill = reclass_cat)) +
-  theme_void() +
-  scale_fill_manual(values = getPalette(colourCount))
-
-ggplot()+
-  geom_sf(data = sf_map, size = 0.1, color = "darkgray")+
-  geom_sf(data = all_trees_spatial, aes (color = spp_common), size = .1)+
-  theme_void()
+# colourCount = length(unique(landcover_data$reclass_cat))
+# getPalette = colorRampPalette(brewer.pal(12, "Set3"))
+# 
+# # attempt landcover map
+# 
+# ggplot(data = landcover_data) +
+#   geom_sf(aes(fill = reclass_cat)) +
+#   theme_void() +
+#   scale_fill_manual(values = getPalette(colourCount))
+# 
+# ggplot()+
+#   geom_sf(data = sf_map, size = 0.1, color = "darkgray")+
+#   geom_sf(data = all_trees_spatial, aes (color = spp_common), size = .1)+
+#   theme_void()
 
 
 #   geom_sf(data = blackwood_acacia_sp, 
@@ -138,37 +146,195 @@ ggplot()+
 
 # Visualize impacts of carbon and nitrogen coefficients for management practices
 
-cp_coeff_df_raw <- read_csv(here("cometplanner", "coefficients - hsp - Combined.csv"))
-
-cp_coeff_df <- cp_coeff_df_raw %>% 
-  clean_names() %>% 
-  mutate(no = as.numeric(no)) %>% 
-  select(2,3,6,7) %>% 
-  pivot_longer(cols = c(3,4),
-               names_to = "variable",
-               values_to = "value") %>% 
-  mutate(practice = str_extract(practice, "\\(.*?\\)")) %>% 
-  group_by(crop, variable) %>% 
-  filter(!duplicated(practice)) %>% 
-  filter(crop != "Orchard")
-  
-plots <- ggplot(cp_coeff_df, aes(x = practice, y = value, fill = crop, group = crop)) +
-  geom_col(position="dodge", width = .3) +
-  theme_minimal() + 
-  # facet_wrap(~ crop, nrow = 1) +
-  theme(panel.spacing = unit(0, "lines")) +
-  theme(panel.grid = element_line(color = "gray90"))
-
-plots
-
-gg.gap(plot=plots,
-       segments=c(8.5,17.5),
-       ylim=c(-2,20))
+# cp_coeff_df_raw <- read_csv(here("cometplanner", "coefficients - hsp - Combined.csv"))
+# 
+# cp_coeff_df <- cp_coeff_df_raw %>% 
+#   clean_names() %>% 
+#   mutate(no = as.numeric(no)) %>% 
+#   select(2,3,6,7) %>% 
+#   pivot_longer(cols = c(3,4),
+#                names_to = "variable",
+#                values_to = "value") %>% 
+#   mutate(practice = str_extract(practice, "\\(.*?\\)")) %>% 
+#   group_by(crop, variable) %>% 
+#   filter(!duplicated(practice)) %>% 
+#   filter(crop != "Orchard")
+#   
+# plots <- ggplot(cp_coeff_df, aes(x = practice, y = value, fill = crop, group = crop)) +
+#   geom_col(position="dodge", width = .3) +
+#   theme_minimal() + 
+#   # facet_wrap(~ crop, nrow = 1) +
+#   theme(panel.spacing = unit(0, "lines")) +
+#   theme(panel.grid = element_line(color = "gray90"))
+# 
+# plots
+# 
+# gg.gap(plot=plots,
+#        segments=c(8.5,17.5),
+#        ylim=c(-2,20))
 
   #coord_flip()
 
 ```
 
+```{r}
+
+library(scales)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(forcats)
+library(scales)
+library(waffle)
+library(magrittr)
+library(hrbrthemes)
+library(lubridate)
+
+af_colors <- c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "green4", "purple4")
+
+## Acreage change over time
+## read in wide data 
+pred_wide <- read_csv(here("results", "predictions_wide.csv")) 
+
+## trying to make a dataframe to have percent change over time of ag acreage 
+bar_30 <- ag_predictions %>% 
+  filter(year == 2030)
+
+## get 2019 values
+bar_everything_else <- ag_observations
+  
+bar_together <- rbind(bar_30, bar_everything_else) %>% 
+  filter(land_class != "total_allclasses") %>% 
+  mutate(year = as.character(year)) %>% 
+  mutate(land_class = str_to_title(land_class)) %>% 
+  dplyr::filter(variable != "net") %>% 
+  mutate(variable = factor(variable, levels = c("acres", "abvgc", "soilc", "noemit"))) %>% 
+   mutate(land_class = ifelse(land_class == "Row", "Row Crop", land_class))
+
+# pct_change <- acres_19_30 %>% 
+  # group_by(land_class) %>% 
+  # mutate(pct_change = (value - lag(value))/lag(value)*100) %>% 
+  # replace(is.na(.), 0)
+  
+## make the graph - probably don't use
+# ggplot() +
+  geom_line(data = pct_change, aes(x = year, y = pct_change, group = land_class, color = land_class), size = 1) +
+  theme_light() +
+  scale_color_brewer(palette = "Set3", direction = -1)
+  
+## set colors
+
+# colors <- usecol("pal_unikn_light", n = 8)
+
+## bar chart
+ggplot(data = bar_together, aes(fill = reorder(land_class,value), y = value, x = year)) +
+  geom_bar(stat = "identity", width = .8) +
+  scale_fill_manual(values = af_colors) +
+  theme_minimal() +
+  scale_x_discrete(expand = c(0, 0), labels = c("2012", "2016", "2019", "2030")) +
+  scale_y_continuous(expand = c(0, 0), labels = scales::comma) +
+  labs(x = "",
+       y = "",
+       fill = "Land class") +
+  facet_wrap(~variable, scales = "free_y",
+             labeller = labeller(variable = 
+    c("abvgc" = "Aboveground Carbon (MT CO2e)",
+      "acres" = "Acres",
+      "net" = "Net (MT CO2e)",
+      "noemit" = "N2O emissions (MT CO2e)",
+      "soilc" = "Soil Carbon (MT CO2e)")))
+
+ggsave(here("files", "figs", "barplots.png"))
+       
+treemap_30 <- ggplot(data = subset(acres_19_30_bar, year== 2030), aes(area = value, fill = land_class, label = land_class)) +
+  geom_treemap() +
+  scale_fill_manual(values = colors) +
+  labs(title = "2030 acreage by land class",
+       fill = "Land class") +
+       geom_treemap_text(colour = "black", place = "centre",
+                    grow = TRUE)
+
+ggsave(here("files", "figs", "treemap_30.png"))
+
+treemap_19 <- ggplot(data = subset(acres_19_30_bar, year== 2019), aes(area = value, fill = land_class, label = land_class)) +
+  geom_treemap() +
+  scale_fill_manual(values = colors) +
+  labs(title = "2019 acreage by land class",
+       fill = "Land class") +
+       geom_treemap_text(colour = "black", place = "centre",
+                    grow = TRUE)
+                    
+ggsave(treemap_19, here("files", "figs", "treemap_19.png"))
+
+treemap_30
+treemap_19
+
+```
+#### LET'S MAKE SOME LINE GRAPHS
+
+```{r}
+
+plot_predict <- ag_predictions %>% 
+  mutate(land_class = str_to_title(land_class)) %>% 
+  mutate(land_class = ifelse(land_class == "Row", "Row Crop", land_class)) %>% 
+  filter(variable != "net") %>% 
+  mutate(variable = factor(variable, levels = c("acres", "abvgc", "soilc", "noemit"))) %>% 
+  mutate(land_class = ifelse(land_class == "Total_allclasses", "Total (all classes)", land_class))
+
+plot_observes <- ag_observations %>% 
+  mutate(land_class = str_to_title(land_class)) %>% filter(variable != "net") %>% 
+  mutate(variable = factor(variable, levels = c("acres", "abvgc", "soilc", "noemit"))) %>% 
+  mutate(land_class = ifelse(land_class == "Total_allclasses", "Total (all classes)", land_class))
+
+line_plots <- ggplot() +
+  geom_line(data = subset(plot_predict, !land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 1.2) +
+  geom_point(data = subset(plot_observes, !land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class)) +
+  facet_wrap(~variable, scales = "free_y",
+             labeller = labeller(variable = 
+    c("abvgc" = "Aboveground Carbon (MT CO2e)",
+      "acres" = "Acres",
+      "net" = "Net (MT CO2e)",
+      "noemit" = "N2O emissions (MT CO2e)",
+      "soilc" = "Soil Carbon (MT CO2e)"))) +
+  theme_minimal() +
+  scale_color_manual(values = af_colors) +
+  labs(color = "Land Class",
+       y = "",
+       x = "") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
+
+line_plots
+
+ggsave(here("files", "figs", "lineplots.jpg"))
+
+line_plots_rangetotal <- ggplot() +
+  geom_line(data = subset(plot_predict, land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 1.2) +
+  geom_point(data = subset(plot_observes, land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class)) +
+  facet_wrap(~variable, scales = "free_y",
+             labeller = labeller(variable = 
+    c("abvgc" = "Aboveground Carbon (MT CO2e)",
+      "acres" = "Acres",
+      "net" = "Net (MT CO2e)",
+      "noemit" = "N2O emissions (MT CO2e)",
+      "soilc" = "Soil Carbon (MT CO2e)"))) +
+  theme_minimal() +
+  scale_color_manual(values = c("Rangeland" = "darkolivegreen3", "Total (all classes)" = "cornflowerblue")) +
+  labs(color = "Land Class",
+       y = "",
+       x = "") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
+
+line_plots_rangetotal
+
+ggsave(here("files", "figs", "lineplotsrange.jpg"))
+
+
+```
+
+<<<<<<< HEAD
+=======
 
 ```{r}
 ## Pie chart attempts
@@ -292,3 +458,4 @@ ggplot(data = subset(tidy_predict_df, variable %in% c("acres", "net")), aes(x = 
 ```
 
 
+>>>>>>> 331fd9099db1e819a5e4e28777382f95edfe89a0

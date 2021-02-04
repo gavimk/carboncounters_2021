@@ -32,12 +32,12 @@ library(plotly)
 # Read in data files and clean up, created in carbon inventory script. These files contain # of acres of each ag class according to calag (no landfire). 
 
 ag_12 <- read_csv(here::here("results", "ag_final_12.csv")) %>% 
-  select(! c(pixels, sqmeter))
+  dplyr::select(! c(pixels, sqmeter))
 ag_16 <- read_csv(here::here("results", "ag_final_16.csv")) %>% 
   clean_names()
 ag_16 <- ag_16[, c(1, 6, 2:5, 7)]
 ag_19 <- read_csv(here::here("results", "ag_final_19.csv")) %>% 
-  select(! c(pixels, sqmeter))
+  dplyr::select(! c(pixels, sqmeter))
 
 colnames <- c("class", "acres","abvgc", "soilc", "noemit", "net", "year")
 colnames(ag_12) = colnames
@@ -93,7 +93,7 @@ predict_df_30_acres <- data.frame(year = c(2012, 2016, 2019, 2030))
 # Next we will build models to fit a linear regression to each crop category along with total ag acreage
 
 select_ag <- all_ag_df_wide %>% 
-  select(2:36)
+  dplyr::select(2:36)
 
 ag_names <- colnames(select_ag)
 
@@ -198,7 +198,9 @@ totals_observed <- tidy_observed %>%
 
 final_observed_df <- bind_rows(tidy_observed, totals_observed)
 
-write_csv(final_predict_df, here("results", "all_ag_observations.csv"))
+write_csv(final_observed_df, here("results", "all_ag_observations.csv"))
+
+write_csv(final_predict_df, here("results", "all_ag_predictions.csv"))
 
 write_csv(all_predict_df, here("results", "predictions_wide.csv"))
 
