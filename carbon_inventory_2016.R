@@ -155,7 +155,7 @@ all_c_n_soil <- merge(ag_natland_carbon_n_16, soil, by = "pointid") %>%
 # okay...let's see if we can make a nice table somehow
 
 all_clean_16_no_tree <- all_c_n_soil %>% 
-  select(reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix, source)
+  dplyr::select(pointid, reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix, source)
 
 # total_abvg_c_16 <- comma(sum(all_clean_16_no_tree$stock_abvgc_mtco2e_pixel, na.rm = TRUE))
 # 
@@ -356,7 +356,7 @@ loop_total_table <- soil_results_dfs[[i]] %>%
   mutate(sqmeter = pixels*900) %>% 
   mutate(acreage = sqmeter/4047) %>% 
   merge(summaries_dfs[[i]], by = "reclass_cat") %>%
-  filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Vineyard", "Greenhouse")) %>% 
+  filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Pastureland", "Vineyard", "Greenhouse")) %>% 
   mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>% 
   adorn_totals() %>% 
   mutate(year = i)
@@ -394,6 +394,9 @@ write_csv(ag_acreage_19, here::here("results", "ag_final_19.csv"))
 # write GIS file
 
 write_csv(reclass_map_file, here::here("results", "reclass_map_file.csv"))
+
+# for mapping in R
+write_csv(all_clean_16_no_tree, here("results", "all_points_values.csv"))
 
 
           
