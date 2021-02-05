@@ -61,7 +61,7 @@ lf_reclass_n <- read.csv(here::here("files", "luts", "lf_reclass_nitrogen.csv"),
   rename(classnames_evt = x_u_feff_evt)
 
 combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>% 
-  select(OBJECTID, pointid, CLASSNAMES.x, CLASSNAMES.y, EVT_NAME,  Reclass_16) %>% 
+  dplyr::select(OBJECTID, pointid, CLASSNAMES.x, CLASSNAMES.y, EVT_NAME,  Reclass_16) %>% 
   clean_names("snake") %>% 
   rename(classnames_evc = classnames_x) %>% 
   rename(classnames_evh = classnames_y) %>%
@@ -71,7 +71,7 @@ combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>%
   left_join(evt_lut, by = "classnames_evt") %>% 
   mutate(grouped = paste(evt_group, evh_group, evc_group, sep = "")) %>% 
   left_join(lf_reclass_n, by = "classnames_evt") %>% 
-  select(-reclass_16) %>% 
+  dplyr::select(-reclass_16) %>% 
   rename(reclass_16 = reclass_category)
 
 # remove NAs - code no longer needed, updated csv's reflect that we updated groups that showed up as NA
@@ -100,7 +100,7 @@ combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>%
 ag_2016_raw <- read.csv(here::here("files", "ag", "ag_2016.csv"), encoding = "UTF-8", na.strings=c(""," ", "NoData", "NA"))
 
 ag_2016 <- ag_2016_raw %>% 
-  select(!c(organic, crop_list)) %>% 
+  dplyr::select(!c(organic, crop_list)) %>% 
   rename(nitrogen = nitrogren_) %>% 
   clean_names("snake") %>% 
   rename(pointid = objectid) %>% 
@@ -120,7 +120,7 @@ combined_ag_natland <- merge(combined_lf_df, ag_2016, by = "pointid") %>%
   mutate(reclass_cat = ifelse(is.na(ag_class), as.character(reclass_16), as.character(ag_class))) %>%
   mutate(reclass_cat = as.character(reclass_cat)) %>% 
   mutate(reclass_cat = ifelse(reclass_cat == "Barren / Fallow",  "Fallow", as.character(reclass_cat))) %>% 
-  select(evt_group, pointid, reclass_cat, grouped, nitrogen, lf_n_category, source) %>% 
+  dplyr::select(evt_group, pointid, reclass_cat, grouped, nitrogen, lf_n_category, source) %>% 
   rename(nitrogen_cat = nitrogen) %>% 
   mutate(reclass_cat = ifelse(reclass_cat == "Wetland",  "Riparian/Wetland", as.character(reclass_cat))) %>% 
   mutate(reclass_cat = ifelse(reclass_cat == "Irrigated Pasture",  "Fodder", as.character(reclass_cat))) %>% 
@@ -128,7 +128,7 @@ combined_ag_natland <- merge(combined_lf_df, ag_2016, by = "pointid") %>%
 
 # simplified file to use in GIS
 reclass_map_file <- combined_ag_natland %>% 
-  select(pointid, reclass_cat)
+  dplyr::select(pointid, reclass_cat)
 
 # calculate stored carbon and nitrous oxide emissions for each pixel (900 sq m)
 
@@ -138,14 +138,14 @@ ag_natland_carbon_n_16 <- combined_ag_natland %>%
   left_join(lut_n, by = "nitrogen_cat") %>% 
   mutate(lbs_n_pixel = (n_rate_lbs_acre*.222395)) %>% # nitrogen application rate (pounds per acre) multiplied by .222395 to get pounds of N applied per per pixel
   mutate(emit_n_lbs_pix = (lbs_n_pixel * .01)) %>% # 1% of nitrogen escapes at NO emissions
-  select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
+  dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
   mutate(stock_abvgc_mtco2e_pixel = (mt_900*3.67)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent
   mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
 
 # read in soil data - unit = gC / m^2
 
 soil <- read_csv(here::here("files", "soil", "ssurgo.csv")) %>% 
-  select(pointid, soc0_30)
+  dplyr::select(pointid, soc0_30)
          
 all_c_n_soil <- merge(ag_natland_carbon_n_16, soil, by = "pointid") %>% 
   mutate(soil900 = (soc0_30*900)) %>% #per m^2 to per 900 m^2
@@ -174,25 +174,27 @@ all_acreages_16 <- all_clean_16_no_tree %>%
   summarize(pixels = n()) %>% 
   mutate(sqmeter = pixels*900) %>% 
   mutate(acreage = sqmeter/4047) %>% 
-  select(! c(pixels, sqmeter)) %>% 
+  dplyr::select(! c(pixels, sqmeter)) %>% 
   adorn_totals()
 
 #create a summary (this is the inventory! yay!)
 ci_summary_cat_16 <- all_clean_16_no_tree %>%
-  select(!source) %>% 
+  dplyr::select(!source) %>% 
   group_by(reclass_cat) %>%
   summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
   mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
-  merge(all_acreages_16, by = "reclass_cat")
+  merge(all_acreages_16, by = "reclass_cat") %>% 
+  dplyr::select(!pointid_sum)
 
 # another summary without landfire ag points to use for baseline
 summary_merge <- all_clean_16_no_tree %>%
   filter(source == "calag") %>% 
-  select(!source) %>% 
+  dplyr::select(!source) %>% 
   group_by(reclass_cat) %>%
   summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
   mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
-  merge(all_acreages_16, by = "reclass_cat")
+  merge(all_acreages_16, by = "reclass_cat") %>% 
+  dplyr::select(!pointid_sum)
 
 ####################################################################################
 # Now let's project agricultural land acreage and carbon to 2030
@@ -200,7 +202,7 @@ summary_merge <- all_clean_16_no_tree %>%
 # calculate same but filter for just ag to use for baseline projection (I know this is clunky, it's bc of how adorn_total works)
 # *NOTE* - do we want the LANDFIRE "Agriculture" category in here? In 2012 and 2019? I think we decided to not use it for baseline?
 ag_acreage_16 <- summary_merge %>%
-  filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Vineyard", "Greenhouse")) %>% 
+  filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Vineyard", "Greenhouse", "Pastureland")) %>% 
   adorn_totals() %>% 
   mutate(year = '2016')
 
@@ -232,7 +234,7 @@ colnames(ag_acreage_16) = c("Landcover Classification", "Total Aboveground Carbo
 ag_2019_raw <- read.csv(here::here("files", "ag", "ag_2019.csv"), encoding = "UTF-8", na.strings=c(""," ", "NoData", "NA"))
 
 ag_2019 <- ag_2019_raw %>% 
-  select(!c(organic, crop_list)) %>% 
+  dplyr::select(!c(organic, crop_list)) %>% 
   rename(nitrogen = nitrogren_) %>% 
   clean_names("snake") %>% 
   mutate(ag_class = as.character(ag_class)) %>% 
@@ -245,7 +247,7 @@ ag_2019 <- ag_2019_raw %>%
 ag_2012_raw <- read.csv(here::here("files", "ag", "ag_2012.csv"), encoding = "UTF-8", na.strings=c(""," ", "NoData", "NA"))
 
 ag_2012 <- ag_2012_raw %>% 
-  select(!c(organic, crop_list)) %>% 
+  dplyr::select(!c(organic, crop_list)) %>% 
   rename(nitrogen = nitrogren_) %>% 
   clean_names("snake") %>% 
   rename(pointid = objectid) %>% 
@@ -266,7 +268,7 @@ fx_merge <- function(ag) {
   mutate(ag_class = as.character(ag_class)) %>% 
   mutate(grouped = ifelse(is.na(ag_class), grouped, ag_class)) %>% 
   mutate(reclass_cat = ifelse(is.na(ag_class), reclass_16, ag_class)) %>% 
-  select(evt_group, pointid, reclass_cat, grouped, nitrogen) %>% 
+  dplyr::select(evt_group, pointid, reclass_cat, grouped, nitrogen) %>% 
   rename(nitrogen_cat = nitrogen)
   
 }
@@ -293,7 +295,7 @@ dfs %>%
   left_join(lut_n, by = "nitrogen_cat") %>% 
   mutate(lbs_n_pixel = (n_rate_lbs_acre*.222395)) %>% # nitrogen application rate (pounds per acre) multiplied by .222395 to get pounds of N applied per per pixel
   mutate(emit_n_lbs_pix = (lbs_n_pixel * .01)) %>% # 1% of nitrogen escapes at NO emissions
-  select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
+  dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
   mutate(stock_abvgc_mtco2e_pixel = (mt_900*3.67)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent
   mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
 
@@ -329,7 +331,7 @@ combined_2019_df <- soil_results_dfs[[2]]
 
 fx_all_clean <- function(df) {
 df %>% 
-  select(reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix) %>% 
+  dplyr::select(reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix) %>% 
   group_by(reclass_cat) %>% 
     summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>% 
     adorn_totals()
