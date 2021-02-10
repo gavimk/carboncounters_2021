@@ -51,6 +51,7 @@ inventory <- read_csv(here("results", "inventory_16.csv")) %>%
   clean_names
 
 # crop report #s https://countyofsb.org/agcomm/cropReportArchive.sbc
+
 range_acre_19 <- 573678
 range_acre_12 <- 584125
 range_acre_16 <- 586047

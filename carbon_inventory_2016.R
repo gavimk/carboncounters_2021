@@ -255,7 +255,8 @@ ag_2012 <- ag_2012_raw %>%
   mutate(nitrogen = as.character(nitrogen)) %>% 
   mutate(nitrogen = ifelse(ag_class == "Barren / Fallow" | ag_class == "Greenhouse", 0, nitrogen)) %>% 
   mutate(ag_class = ifelse(ag_class == "Irrigated Pasture",  "Fodder", as.character(ag_class))) %>% 
-  mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class)))
+  mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class))) %>% 
+  mutate(nitrogen = ifelse(ag_class == "Pastureland", "Field Crops", nitrogen))
 
 # create tables for 2012 and 2019
 
