@@ -235,7 +235,7 @@ line_plot_acres_rangetotal <- ggplot() +
   labs(color = "Land Class",
        y = "Acres",
        x = "",
-       title = "Observed and Projected Acres by Land Class") +
+       title = "Estimated Past and Projected Future Acres by Land Class") +
   scale_y_continuous(labels = scales::comma) +
   scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
 
@@ -249,7 +249,7 @@ line_plot_acres_ag <- ggplot() +
   labs(color = "Land Class",
        y = "Acres",
        x = "",
-      title = "Observed and Projected Acres by Land Class") +
+      title = "Estimated Past and Projected Future Acres by Land Class") +
   scale_y_continuous(labels = scales::comma) +
   scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
 
@@ -263,7 +263,7 @@ line_plot_stock_ag <- ggplot() +
   labs(color = "Land Class",
        y = "MTCO2e",
        x = "",
-        title = "Observed and Projected Carbon Stocks by Land Class") +
+        title = "Estimated Past and Projected Future Carbon Stocks by Land Class") +
   scale_y_continuous(labels = scales::comma) +
   scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
 
@@ -277,7 +277,7 @@ line_plot_stock_rangetotal <- ggplot() +
   labs(color = "Land Class",
        y = "MTCO2e",
        x = "",
-       title = "Observed and Projected Carbon Stocks by Land Class") +
+       title = "Estimated Past and Projected Future Carbon Stocks by Land Class") +
   scale_y_continuous(labels = scales::comma) +
   scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
 
@@ -291,26 +291,26 @@ line_plot_n2o <- ggplot() +
   labs(color = "Land Class",
        y = "MTCO2e",
        x = "",
-       title = "Observed and Projected Nitrous Oxide Emissions by Land Class") +
+       title = "Estimated Past and Projected Future Nitrous Oxide Emissions by Land Class") +
   scale_y_continuous(labels = scales::comma) +
   scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
 
 line_plot_n2o
 
 line_plot_acres_rangetotal
-ggsave(here("files", "figs", "line_plot_acres_rangetotal.png"))
+ggsave(here("files", "figs", "line_plot_acres_rangetotal.jpg"))
 
 line_plot_acres_ag
-ggsave(here("files", "figs", "line_plot_acres_ag.png"))
+ggsave(here("files", "figs", "line_plot_acres_ag.jpg"))
 
 line_plot_n2o
-ggsave(here("files", "figs", "line_plot_n2o.png"))
+ggsave(here("files", "figs", "line_plot_n2o.jpg"))
 
 line_plot_stock_ag
-ggsave(here("files", "figs", "line_plot_stock_ag.png"))
+ggsave(here("files", "figs", "line_plot_stock_ag.jpg"))
 
 line_plot_stock_rangetotal
-ggsave(here("files", "figs", "line_plot_stock_rangetotal.png"))
+ggsave(here("files", "figs", "line_plot_stock_rangetotal.jpg"))
 
 ```
 
@@ -369,28 +369,121 @@ ggsave(here("files", "figs", "line_plot_stock_rangetotal.png"))
 
 # ggsave(here("files", "figs", "barplots.png"))
        
-treemap_30 <- ggplot(data = subset(acres_19_30_bar, year== 2030), aes(area = value, fill = land_class, label = land_class)) +
-  geom_treemap() +
-  scale_fill_manual(values = colors) +
-  labs(title = "2030 acreage by land class",
-       fill = "Land class") +
-       geom_treemap_text(colour = "black", place = "centre",
-                    grow = TRUE)
+# treemap_30 <- ggplot(data = subset(acres_19_30_bar, year== 2030), aes(area = value, fill = land_class, label = land_class)) +
+#   geom_treemap() +
+#   scale_fill_manual(values = colors) +
+#   labs(title = "2030 acreage by land class",
+#        fill = "Land class") +
+#        geom_treemap_text(colour = "black", place = "centre",
+#                     grow = TRUE)
+# 
+# ggsave(here("files", "figs", "treemap_30.png"))
+# 
+# treemap_19 <- ggplot(data = subset(acres_19_30_bar, year== 2019), aes(area = value, fill = land_class, label = land_class)) +
+#   geom_treemap() +
+#   scale_fill_manual(values = colors) +
+#   labs(title = "2019 acreage by land class",
+#        fill = "Land class") +
+#        geom_treemap_text(colour = "black", place = "centre",
+#                     grow = TRUE)
+#                     
+# ggsave(treemap_19, here("files", "figs", "treemap_19.png"))
+# 
+# treemap_30
+# treemap_19
 
-ggsave(here("files", "figs", "treemap_30.png"))
+```
 
-treemap_19 <- ggplot(data = subset(acres_19_30_bar, year== 2019), aes(area = value, fill = land_class, label = land_class)) +
-  geom_treemap() +
-  scale_fill_manual(values = colors) +
-  labs(title = "2019 acreage by land class",
-       fill = "Land class") +
-       geom_treemap_text(colour = "black", place = "centre",
-                    grow = TRUE)
-                    
-ggsave(treemap_19, here("files", "figs", "treemap_19.png"))
+```{r revised lineplots dotted}
 
-treemap_30
-treemap_19
+rev_plot_predict <- rev_plot_predict %>% 
+  mutate(year = as.numeric(year))
+
+# Make plots again
+updt_plot_acres_allclass <- ggplot() +
+ geom_line(data = subset(rev_plot_predict, variable == "acres"), aes(x = year, y = value, group = land_class, color = land_class), size = .7, linetype = "dashed") +
+  geom_point(data = tstock_plot_acres, aes(x = year, y = value, group = land_class, color = land_class), size = 3.3) +
+  theme_minimal() +
+  scale_color_manual(values = c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "darkolivegreen3", "green4", "cornflowerblue", "purple4")) +
+  labs(color = "Land Class",
+       y = "Acres",
+       x = "",
+       title = "Estimated Past and Projected Future Acres by Land Class") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
+
+updt_plot_acres_allclass
+
+updt_plot_acres_ag <- ggplot() +
+  geom_line(data = subset(rev_plot_predict, !land_class %in% c("Rangeland", "Total (all classes)") &  variable == "acres"), aes(x = year, y = value, group = land_class, color = land_class), size = 1.2, linetype = "dashed") +
+  geom_point(data = subset(tstock_plot_acres, !land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 3.3) +
+  theme_minimal() +
+  scale_color_manual(values = af_colors) +
+  labs(color = "Land Class",
+       y = "Acres",
+       x = "",
+      title = "Estimated Past and Projected Future Acres by Land Class") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
+
+updt_plot_acres_ag
+
+line_plot_stock_ag <- ggplot() +
+  geom_line(data = subset(tstock_plot_stock, !land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 1.2) +
+  geom_point(data = subset(tstock_plot_stock, !land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 3) +
+  theme_minimal() +
+  scale_color_manual(values = af_colors) +
+  labs(color = "Land Class",
+       y = "MTCO2e",
+       x = "",
+        title = "Estimated Past and Projected Future Carbon Stocks by Land Class") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
+
+line_plot_stock_ag
+
+line_plot_stock_rangetotal <- ggplot() +
+  geom_line(data = subset(tstock_plot_stock, land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 1.2) +
+  geom_point(data = subset(tstock_plot_stock, land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 3) +
+  theme_minimal() +
+  scale_color_manual(values = c("Rangeland" = "darkolivegreen3", "Total (all classes)" = "cornflowerblue")) +
+  labs(color = "Land Class",
+       y = "MTCO2e",
+       x = "",
+       title = "Estimated Past and Projected Future Carbon Stocks by Land Class") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
+
+line_plot_stock_rangetotal
+
+line_plot_n2o <- ggplot() +
+  geom_line(data = tstock_plot_n2o, aes(x = year, y = value, group = land_class, color = land_class), size = .7) +
+  geom_point(data = tstock_plot_n2o, aes(x = year, y = value, group = land_class, color = land_class), size = 3) +
+  theme_minimal() +
+  scale_color_manual(values = c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "darkolivegreen3", "green4", "cornflowerblue", "purple4")) +
+  labs(color = "Land Class",
+       y = "MTCO2e",
+       x = "",
+       title = "Estimated Past and Projected Future Nitrous Oxide Emissions by Land Class") +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30"))
+
+line_plot_n2o
+
+line_plot_acres_rangetotal
+ggsave(here("files", "figs", "line_plot_acres_rangetotal.jpg"))
+
+line_plot_acres_ag
+ggsave(here("files", "figs", "line_plot_acres_ag.jpg"))
+
+line_plot_n2o
+ggsave(here("files", "figs", "line_plot_n2o.jpg"))
+
+line_plot_stock_ag
+ggsave(here("files", "figs", "line_plot_stock_ag.jpg"))
+
+line_plot_stock_rangetotal
+ggsave(here("files", "figs", "line_plot_stock_rangetotal.jpg"))
 
 ```
 
