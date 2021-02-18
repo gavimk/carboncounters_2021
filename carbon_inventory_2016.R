@@ -242,7 +242,8 @@ ag_2019 <- ag_2019_raw %>%
   mutate(nitrogen = ifelse(ag_class == "Barren / Fallow" | ag_class == "Greenhouse", 0, nitrogen)) %>% 
   mutate(ag_class = ifelse(ag_class == "Irrigated Pasture",  "Fodder", as.character(ag_class))) %>% 
   mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class))) %>% 
-  rename(pointid = objectid)
+  rename(pointid = objectid) %>% 
+  mutate(source = ifelse(is.na(ag_class), "landfire", "calag"))
 
 ag_2012_raw <- read.csv(here::here("files", "ag", "ag_2012.csv"), encoding = "UTF-8", na.strings=c(""," ", "NoData", "NA"))
 
@@ -256,7 +257,8 @@ ag_2012 <- ag_2012_raw %>%
   mutate(nitrogen = ifelse(ag_class == "Barren / Fallow" | ag_class == "Greenhouse", 0, nitrogen)) %>% 
   mutate(ag_class = ifelse(ag_class == "Irrigated Pasture",  "Fodder", as.character(ag_class))) %>% 
   mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class))) %>% 
-  mutate(nitrogen = ifelse(ag_class == "Pastureland", "Field Crops", nitrogen))
+  mutate(nitrogen = ifelse(ag_class == "Pastureland", "Field Crops", nitrogen)) %>% 
+  mutate(source = ifelse(is.na(ag_class), "landfire", "calag"))
 
 # create tables for 2012 and 2019
 
@@ -269,8 +271,9 @@ fx_merge <- function(ag) {
   mutate(ag_class = as.character(ag_class)) %>% 
   mutate(grouped = ifelse(is.na(ag_class), grouped, ag_class)) %>% 
   mutate(reclass_cat = ifelse(is.na(ag_class), reclass_16, ag_class)) %>% 
-  dplyr::select(evt_group, pointid, reclass_cat, grouped, nitrogen) %>% 
-  rename(nitrogen_cat = nitrogen)
+  dplyr::select(evt_group, pointid, reclass_cat, grouped, nitrogen, source) %>% 
+  rename(nitrogen_cat = nitrogen) %>% 
+  filter(source == "calag")
   
 }
 
@@ -298,7 +301,7 @@ dfs %>%
   mutate(emit_n_lbs_pix = (lbs_n_pixel * .01)) %>% # 1% of nitrogen escapes at NO emissions
   dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
   mutate(stock_abvgc_mtco2e_pixel = (mt_900*3.67)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent
-  mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
+  mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes 
 
 }
 
@@ -400,7 +403,3 @@ write_csv(reclass_map_file, here::here("results", "reclass_map_file.csv"))
 
 # for mapping in R
 write_csv(all_clean_16_no_tree, here("results", "all_points_values.csv"))
-
-
-          
-          
