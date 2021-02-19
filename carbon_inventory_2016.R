@@ -137,7 +137,7 @@ ag_natland_carbon_n_16 <- combined_ag_natland %>%
   mutate(mt_900 = (total_mt*.09)) %>% # MT carbon per hectare multiplied by .09 to get metric tons of carbon per pixel (900 sq m)
   left_join(lut_n, by = "nitrogen_cat") %>% 
   mutate(lbs_n_pixel = (n_rate_lbs_acre*.222395)) %>% # nitrogen application rate (pounds per acre) multiplied by .222395 to get pounds of N applied per per pixel
-  mutate(emit_n_lbs_pix = (lbs_n_pixel * .01)) %>% # 1% of nitrogen escapes at NO emissions
+  mutate(emit_n_lbs_pix = (lbs_n_pixel * .0175)) %>% # 1% of nitrogen escapes at NO emissions
   dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
   mutate(stock_abvgc_mtco2e_pixel = (mt_900*3.67)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent
   mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
@@ -295,7 +295,7 @@ dfs %>%
   mutate(mt_900 = (total_mt*.09)) %>% # MT carbon per hectare multiplied by .09 to get metric tons of carbon per pixel (900 sq m)
   left_join(lut_n, by = "nitrogen_cat") %>% 
   mutate(lbs_n_pixel = (n_rate_lbs_acre*.222395)) %>% # nitrogen application rate (pounds per acre) multiplied by .222395 to get pounds of N applied per per pixel
-  mutate(emit_n_lbs_pix = (lbs_n_pixel * .01)) %>% # 1% of nitrogen escapes at NO emissions
+  mutate(emit_n_lbs_pix = (lbs_n_pixel * .0175)) %>% # 1% of nitrogen escapes at NO emissions
   dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
   mutate(stock_abvgc_mtco2e_pixel = (mt_900*3.67)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent
   mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
