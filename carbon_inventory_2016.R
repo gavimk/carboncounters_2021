@@ -139,7 +139,7 @@ ag_natland_carbon_n_16 <- combined_ag_natland %>%
   mutate(lbs_n_pixel = (n_rate_lbs_acre*.222395)) %>% # nitrogen application rate (pounds per acre) multiplied by .222395 to get pounds of N applied per per pixel
   mutate(emit_n_lbs_pix = (lbs_n_pixel * .0175)) %>% # 1% of nitrogen escapes at NO emissions
   dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
-  mutate(stock_abvgc_mtco2e_pixel = (mt_900*3.67)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent
+  mutate(stock_abvgc_mtco2e_pixel = (mt_900*1)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent # Decided to report as MT instead, replace 3.67 value w 1 to not break rest of code
   mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
 
 # read in soil data - unit = gC / m^2
@@ -150,7 +150,7 @@ soil <- read_csv(here::here("files", "soil", "ssurgo.csv")) %>%
 all_c_n_soil <- merge(ag_natland_carbon_n_16, soil, by = "pointid") %>% 
   mutate(soil900 = (soc0_30*900)) %>% #per m^2 to per 900 m^2
   mutate(soilMT = (soil900/1000000)) %>%  # grams to metric tons of organic carbon
-  mutate(stock_soilc_mtco2e_pix = soilMT*3.67) # convert to CO2e
+  mutate(stock_soilc_mtco2e_pix = soilMT*1) # convert to CO2e # Decided to report as MT instead, replace 3.67 value w 1 to not break rest of code
   
 # okay...let's see if we can make a nice table somehow
 
@@ -300,7 +300,7 @@ dfs %>%
   mutate(lbs_n_pixel = (n_rate_lbs_acre*.222395)) %>% # nitrogen application rate (pounds per acre) multiplied by .222395 to get pounds of N applied per per pixel
   mutate(emit_n_lbs_pix = (lbs_n_pixel * .0175)) %>% # 1% of nitrogen escapes at NO emissions
   dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
-  mutate(stock_abvgc_mtco2e_pixel = (mt_900*3.67)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent
+  mutate(stock_abvgc_mtco2e_pixel = (mt_900*1)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent # Decided to report as MT instead, replace 3.67 value w 1 to not break rest of code
   mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes 
 
 }
@@ -319,7 +319,7 @@ ghg_dfs %>%
   merge(soil, by = "pointid") %>% 
   mutate(soil900 = (soc0_30*900)) %>% #per m^2 to per 900 m^2
   mutate(soilMT = (soil900/1000000)) %>%  # grams to metric tons of organic carbon
-  mutate(stock_soilc_mtco2e_pix = soilMT*3.67) # convert to CO2e
+  mutate(stock_soilc_mtco2e_pix = soilMT*1) # convert to CO2e #Decided to report as MT instead, replace 3.67 value w 1 to not break rest of code
 }
 
 soil_results <- lapply(ghg_dfs, fx_soil) %>% 

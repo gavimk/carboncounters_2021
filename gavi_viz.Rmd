@@ -420,7 +420,7 @@ updt_plot_acres_allclass <- ggplot() +
   theme_minimal() +
   scale_color_manual(values = c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "darkolivegreen3", "green4", "cornflowerblue", "purple4")) +
   labs(color = "Land Class",
-       y = "",
+       y = "Acres",
        x = "",
        title = "Estimated Past and Projected Future Acres by Land Class") +
   scale_y_continuous(labels = scales::comma) +
@@ -435,7 +435,7 @@ updt_plot_acres_ag <- ggplot() +
   theme_minimal() +
   scale_color_manual(values = af_colors) +
   labs(color = "Land Class",
-       y = "",
+       y = "Acres",
        x = "",
       title = "Estimated Past and Projected Future Acres by Land Class") +
   scale_y_continuous(labels = scales::comma) +
@@ -451,7 +451,7 @@ updt_plot_stock_ag <- ggplot() +
   theme_minimal() +
   scale_color_manual(values = af_colors) +
   labs(color = "Land Class",
-       y = "MTCO2e",
+       y = "MT Carbon",
        x = "",
         title = "Estimated Past and Projected Future Carbon Stocks by Land Class") +
   scale_y_continuous(labels = scales::comma) +
@@ -466,7 +466,7 @@ updt_plot_stock_all <- ggplot() +
   theme_minimal() +
   scale_color_manual(values = c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "darkolivegreen3", "green4", "cornflowerblue", "purple4")) +  
   labs(color = "Land Class",
-       y = "MTCO2e",
+       y = "MT Carbon",
        x = "",
        title = "Estimated Past and Projected Future Carbon Stocks by Land Class") +
   scale_y_continuous(labels = scales::comma) +
