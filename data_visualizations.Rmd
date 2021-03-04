@@ -499,5 +499,3 @@ inventory_stocks <- inventory %>%
 
 ```
 
-
->>>>>>> 331fd9099db1e819a5e4e28777382f95edfe89a0
