@@ -49,11 +49,11 @@ library(stars)
 
 ```{r, cache = TRUE}
 
-pred_wide <- read_csv(here("results", "predictions_wide.csv")) 
+# pred_wide <- read_csv(here("results", "predictions_wide.csv")) 
 
-ag_observations <- read_csv(here("results", "all_ag_observations.csv"))
+# ag_observations <- read_csv(here("results", "all_ag_observations.csv"))
 
-ag_predictions <- read_csv(here("results", "all_predictions.csv")) 
+# ag_predictions <- read_csv(here("results", "all_predictions.csv")) 
 
 point_coords <- read_csv(here("files", "mapping", "point_coords.csv"))
 
@@ -65,36 +65,98 @@ all_coord_vals <- merge(point_coords, values, by = "pointid") %>%
   dplyr::select(!c(2,3)) %>% 
   mutate(total_stock = stock_soilc_mtco2e_pix + stock_abvgc_mtco2e_pixel)
 
-cp_coeff_df_raw <- read_csv(here("cometplanner", "coefficients - hsp - Combined.csv"))
+# cp_coeff_df_raw <- read_csv(here("cometplanner", "coefficients - hsp - Combined.csv"))
 
-af_colors <- c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "green4", "purple4")
+# af_colors <- c("lightsteelblue", "goldenrod", "lightslategrey", "darkred", "sandybrown", "green4", "purple4")
 
 ```
 
 ```{r}
+# county outline
 
 counties <- read_sf(here("files", "mapping", "county_out"), layer = "CountyOutline") %>% 
   st_transform("+proj=longlat")
 
-st_crs(counties)
+plot(counties)
 
-all_coord_vals <- all_coord_vals %>% 
+# st_crs(counties)$proj4string
+
+# set reference raster
+
+sb_landsat <- here("files/spatial/data/Landsat7.tif")
+sb_ls_rast <- raster(sb_landsat, band = 2)
+
+gis_tif <- here("files/spatial/county/county_rast1.tif")
+gis_county_rast <- raster(gis_tif)
+
+plot(gis_county_rast)
+
+sb_ls_rast <- raster::aggregate(sb_ls_rast, fact = 3, fun = mean)
+
+plot(sb_ls_rast)
+
+plot(sbc_rast)
+
+# crs(sb_ls_rast)
+
+# crs(sb_ls_rast) <- ("+proj=lcc +lat_1=34.03333333333333 +lat_2=35.46666666666667 +lat_0=33.5 +lon_0=-118 +x_0=2000000 +y_0=500000.0000000002 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs")
+
+sbc_rast <- raster(here("files/spatial/data/county.tif"))
+# crs(sbc_rast) <- crs(sb_ls_rast)
+
+# make masked raster
+
+sb_mask <- mask(sb_ls_rast, sbc_rast)
+plot(sb_mask)
+crs(sb_mask) <- ("+proj=aea +lat_1=34.03333333333333 +lat_2=35.46666666666667 +lat_0=33.5 +lon_0=-118 +x_0=2000000 +y_0=500000.0000000002 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs")
+res(sb_mask)
+sb_mask <- disaggregate(sb_mask, fact = 3)
+res(sb_mask)
+crs(sb_mask)
+
+# load in sb county raster 30x30, transform crs (from git allison) - use rasterize, take sb county base raster, rasterize function - field 1 per raster - must be numeric, assign # values to land class types 
+
+all_coord_clean <- all_coord_vals %>% 
   st_as_sf(coords = c("lon", "lat")) %>% 
-  st_set_crs(st_crs(counties))
+  st_set_crs(4326) %>% 
+  mutate(reclass_fact = as.factor(reclass_cat)) %>% 
+  mutate(reclass_num = as.numeric(reclass_fact))
 
-vals_spatial <- as(all_coord_vals, "Spatial")
+reclass_levels <- data.frame(levels(all_coord_vals$reclass_fact), c(1:14))
 
-plot(vals_raster)
+all_coord_spatial <- all_coord_vals %>% 
+  as("Spatial")
 
-st_crs(all_coord_vals)
+# crs(all_coord_vals) <- ("+proj=longlat +lat_1=34.03333333333333 +lat_2=35.46666666666667 +lat_0=33.5 +lon_0=-118 +x_0=2000000 +y_0=500000.0000000002 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs")
 
-all_coords_raster <- raster::rasterize(all_coord_vals)
+rast_landclass <- raster::rasterize(all_coord_vals, sb_mask, field = 'total_stock', fun = mean)
 
-ggplot() +
-  geom_sf(data = counties) +
-  geom_sf(data = all_coord_vals,
-              aes(color = reclass_cat),
-              size = .01)
+plot(sb_mask)
+plot(rast_landclass)
+
+grid <- st_bbox(all_coord_clean)
+
+# add - as("Spatial") - transform from SF to spatial (spatial points)
+
+# Raster plot faster than ggplot 
+# aggregate function, 90 or 120 - reduce cell count, run faster # modal argument for aggregate
+# try tmap - ggplot if it's not too slow
+
+# all_coord_raster <- rasterize()
+# 
+# # vals_spatial <- as(all_coord_vals, "Spatial")
+# 
+# plot(vals_raster)
+# 
+# st_crs(all_coord_vals)
+# 
+# all_coords_raster <- raster::rasterize(all_coord_vals)
+# 
+# ggplot() +
+#   geom_sf(data = counties) +
+#   geom_sf(data = all_coord_vals,
+#               aes(color = reclass_cat),
+#               size = .01)
 
 ```
 

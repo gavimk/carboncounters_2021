@@ -238,6 +238,9 @@ tstock_plot_stock <- tstock_plot_all %>%
 tstock_plot_n2o <- tstock_plot_all %>% 
   filter(variable == "noemit")
 
+write_csv(rev_plot_predict, here("results", "shiny_predict_30.csv"))
+write_csv(tstock_plot_all, here("results", "shiny_observed_30.csv"))
+
 # Make plots again
 line_plot_acres_rangetotal <- ggplot() +
   geom_line(data = subset(tstock_plot_acres, land_class %in% c("Rangeland", "Total (all classes)")), aes(x = year, y = value, group = land_class, color = land_class), size = 1.2) +
