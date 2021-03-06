@@ -83,36 +83,38 @@ plot(counties)
 
 # set reference raster
 
-sb_landsat <- here("files/spatial/data/Landsat7.tif")
-sb_ls_rast <- raster(sb_landsat, band = 2)
+# sb_landsat <- here("files/spatial/data/Landsat7.tif")
+# sb_ls_rast <- raster(sb_landsat, band = 2)
 
 gis_tif <- here("files/spatial/county/county_rast1.tif")
 gis_county_rast <- raster(gis_tif)
-
+crs(gis_county_rast)
+gis_tif
 plot(gis_county_rast)
+res(gis_county_rast)
 
-sb_ls_rast <- raster::aggregate(sb_ls_rast, fact = 3, fun = mean)
-
-plot(sb_ls_rast)
-
-plot(sbc_rast)
-
+# sb_ls_rast <- raster::aggregate(sb_ls_rast, fact = 3, fun = mean)
+# 
+# plot(sb_ls_rast)
+# 
+# plot(sbc_rast)
+# 
 # crs(sb_ls_rast)
-
+# 
 # crs(sb_ls_rast) <- ("+proj=lcc +lat_1=34.03333333333333 +lat_2=35.46666666666667 +lat_0=33.5 +lon_0=-118 +x_0=2000000 +y_0=500000.0000000002 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs")
-
-sbc_rast <- raster(here("files/spatial/data/county.tif"))
+# 
+# sbc_rast <- raster(here("files/spatial/data/county.tif"))
 # crs(sbc_rast) <- crs(sb_ls_rast)
 
 # make masked raster
 
-sb_mask <- mask(sb_ls_rast, sbc_rast)
-plot(sb_mask)
-crs(sb_mask) <- ("+proj=aea +lat_1=34.03333333333333 +lat_2=35.46666666666667 +lat_0=33.5 +lon_0=-118 +x_0=2000000 +y_0=500000.0000000002 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs")
-res(sb_mask)
-sb_mask <- disaggregate(sb_mask, fact = 3)
-res(sb_mask)
-crs(sb_mask)
+# sb_mask <- mask(sb_ls_rast, sbc_rast)
+# plot(sb_mask)
+# crs(sb_mask) <- ("+proj=aea +lat_1=34.03333333333333 +lat_2=35.46666666666667 +lat_0=33.5 +lon_0=-118 +x_0=2000000 +y_0=500000.0000000002 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs")
+# res(sb_mask)
+# sb_mask <- disaggregate(sb_mask, fact = 3)
+# res(sb_mask)
+# crs(sb_mask)
 
 # load in sb county raster 30x30, transform crs (from git allison) - use rasterize, take sb county base raster, rasterize function - field 1 per raster - must be numeric, assign # values to land class types 
 
@@ -120,21 +122,42 @@ all_coord_clean <- all_coord_vals %>%
   st_as_sf(coords = c("lon", "lat")) %>% 
   st_set_crs(4326) %>% 
   mutate(reclass_fact = as.factor(reclass_cat)) %>% 
-  mutate(reclass_num = as.numeric(reclass_fact))
+  mutate(reclass_num = as.numeric(reclass_fact)) %>% 
+  st_transform("+proj=lcc +lat_0=33.5 +lon_0=-118 +lat_1=35.4666666666667 +lat_2=34.0333333333333 +x_0=2000000.0001016 +y_0=500000.0001016 +datum=NAD83 +units=us-ft +no_defs")
 
-reclass_levels <- data.frame(levels(all_coord_vals$reclass_fact), c(1:14))
+reclass_levels <- data.frame(levels(all_coord_clean$reclass_fact), c(1:14))
 
-all_coord_spatial <- all_coord_vals %>% 
+all_coord_spatial <- all_coord_clean %>% 
   as("Spatial")
 
-# crs(all_coord_vals) <- ("+proj=longlat +lat_1=34.03333333333333 +lat_2=35.46666666666667 +lat_0=33.5 +lon_0=-118 +x_0=2000000 +y_0=500000.0000000002 +ellps=GRS80 +datum=NAD83 +to_meter=0.3048006096012192 +no_defs")
+rast_totalstock <- raster::rasterize(all_coord_spatial, gis_county_rast, field = 'total_stock', fun = mean)
+rast_landclass <- raster::rasterize(all_coord_spatial, gis_county_rast, field = 'reclass_num', fun = "last")
+rast_n2o <- raster::rasterize(all_coord_spatial, gis_county_rast, field = 'noemit', fun = mean)
+rast_abvgc <- raster::rasterize(all_coord_spatial, gis_county_rast, field = 'noemit', fun = mean)
 
-rast_landclass <- raster::rasterize(all_coord_vals, sb_mask, field = 'total_stock', fun = mean)
+rast_landclass_fact <- ratify(rast_landclass)
+rat <- levels(rast_landclass_fact)[[1]]
+rat$names <- unique(levels(all_coord_clean$reclass_fact))
+levels(rast_landclass_fact) <- rat
 
-plot(sb_mask)
+plot(rast_totalstock)
 plot(rast_landclass)
 
-grid <- st_bbox(all_coord_clean)
+# ggplot() +
+  # geom_sf(counties, aes(x = ))
+
+colors <- c("gainsboro", "black", "lightsteelblue", "goldenrod", "darkgreen", "darkolivegreen3", "lightslategrey", "darkred", "sandybrown", "cornflowerblue", "chartreuse3", "burlywood3", "purple4", "dodgerblue4") 
+  
+tmap_mode("view")
+
+tm_shape(rast_landclass_fact) +
+  tm_raster(n = 14, pal = colors, alpha = .6) +
+  tm_basemap(leaflet::providers$CartoDB.Positron)
+
+tm_shape(rast_totalstock) +
+  tm_raster(style = "cont", title = "Total Carbon Stocks (MT Carbon)", palette = "Greens")
+
+# grid <- st_bbox(all_coord_clean)
 
 # add - as("Spatial") - transform from SF to spatial (spatial points)
 

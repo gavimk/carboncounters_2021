@@ -137,10 +137,10 @@ ag_natland_carbon_n_16 <- combined_ag_natland %>%
   mutate(mt_900 = (total_mt*.09)) %>% # MT carbon per hectare multiplied by .09 to get metric tons of carbon per pixel (900 sq m)
   left_join(lut_n, by = "nitrogen_cat") %>% 
   mutate(lbs_n_pixel = (n_rate_lbs_acre*.222395)) %>% # nitrogen application rate (pounds per acre) multiplied by .222395 to get pounds of N applied per per pixel
-  mutate(emit_n_lbs_pix = (lbs_n_pixel * .0175)) %>% # 1% of nitrogen escapes at NO emissions
+  mutate(emit_n_lbs_pix = (lbs_n_pixel * .0175)) %>% # 1.75% of nitrogen escapes at N2O emissions
   dplyr::select(!c(n_rate_lbs_acre, lbs_n_pixel)) %>% 
   mutate(stock_abvgc_mtco2e_pixel = (mt_900*1)) %>%  # multiply metric tons of carbon by 3.67 to get MT of CO2 equivalent # Decided to report as MT instead, replace 3.67 value w 1 to not break rest of code
-  mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to NO emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
+  mutate(emit_no_mtco2e_pix = emit_n_lbs_pix*298*0.000453592) # multiply pounds to N2O emissions by 298 to convert to pounds CO2e, then by 0.000453592 to get metric tonnes
 
 # read in soil data - unit = gC / m^2
 
@@ -155,7 +155,8 @@ all_c_n_soil <- merge(ag_natland_carbon_n_16, soil, by = "pointid") %>%
 # okay...let's see if we can make a nice table somehow
 
 all_clean_16_no_tree <- all_c_n_soil %>% 
-  dplyr::select(pointid, reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix, source)
+  dplyr::select(pointid, reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix, source) %>% 
+  mutate(emit_no_mtco2e_pix = replace_na(emit_no_mtco2e_pix, 0))
 
 # total_abvg_c_16 <- comma(sum(all_clean_16_no_tree$stock_abvgc_mtco2e_pixel, na.rm = TRUE))
 # 
