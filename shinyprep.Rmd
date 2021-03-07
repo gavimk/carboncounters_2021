@@ -140,6 +140,7 @@ rast_n2o <- raster::rasterize(all_coord_spatial, gis_county_rast, field = 'emit_
 rast_abvgc <- raster::rasterize(all_coord_spatial, gis_county_rast, field = 'stock_abvgc_mtco2e_pixel', fun = mean)
 rast_soilc <- raster::rasterize(all_coord_spatial, gis_county_rast, field = 'stock_soilc_mtco2e_pix', fun = mean)
 
+
 rast_landclass_fact <- ratify(rast_landclass)
 rat <- levels(rast_landclass_fact)[[1]]
 rat$names <- unique(levels(all_coord_clean$reclass_fact))
