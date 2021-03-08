@@ -47,3 +47,11 @@ results/all_points_values.csv
 
 # Ag classifications folder
 ag_classifications/
+
+# Tif files (pretty large)
+aboveground_raster.tif
+carbonstock_raster.tif
+landclass_raster.tif
+landclass_raster.tif.aux.xml
+n2o_raster.tif
+soil_raster.tif

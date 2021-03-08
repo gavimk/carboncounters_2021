@@ -211,7 +211,7 @@ ag_acreage_16 <- summary_merge %>%
 
 # CO2e stored/urban tree canopy (metric tons/acre)
 
-tree_num <- 114.8730627
+tree_num <- 114.8730627/3.67
 
 # This may need to be hard coded - need to double check this cell reference is correct 
 urban_acres <- all_acreages_16[2, 2]
