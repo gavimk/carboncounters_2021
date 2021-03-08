@@ -163,6 +163,15 @@ tm_shape(rast_landclass_fact) +
 tm_shape(rast_totalstock) +
   tm_raster(style = "cont", title = "Total Carbon Stocks (MT Carbon)", palette = "Greens")
 
+tm_shape(rast_n2o) + 
+  tm_raster(style = "cont")
+
+writeRaster(rast_landclass_fact, "landclass_raster.tif")
+writeRaster(rast_totalstock, "carbonstock_raster.tif")
+writeRaster(rast_abvgc, "aboveground_raster.tif")
+writeRaster(rast_soilc, "soil_raster.tif")
+writeRaster(rast_n2o, "n2o_raster.tif")
+
 # grid <- st_bbox(all_coord_clean)
 
 # add - as("Spatial") - transform from SF to spatial (spatial points)
