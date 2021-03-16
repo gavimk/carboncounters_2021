@@ -58,7 +58,8 @@ precombin_df <- merge(lf_evc_16, lf_evh_16, by = "OBJECTID")
 
 lf_reclass_n <- read.csv(here::here("files", "luts", "lf_reclass_nitrogen.csv"), encoding = "UTF-8") %>% 
   clean_names() %>% 
-  rename(classnames_evt = x_u_feff_evt)
+  rename(classnames_evt = x_u_feff_evt) %>% 
+  rename(lf_n_category = n_category)
 
 combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>% 
   dplyr::select(OBJECTID, pointid, CLASSNAMES.x, CLASSNAMES.y, EVT_NAME,  Reclass_16) %>% 
@@ -183,7 +184,7 @@ ci_summary_cat_16 <- all_clean_16_no_tree %>%
   dplyr::select(!source) %>% 
   group_by(reclass_cat) %>%
   summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
-  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
+  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum)) %>%
   merge(all_acreages_16, by = "reclass_cat") %>% 
   dplyr::select(!pointid_sum)
 
@@ -193,7 +194,7 @@ summary_merge <- all_clean_16_no_tree %>%
   dplyr::select(!source) %>% 
   group_by(reclass_cat) %>%
   summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
-  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
+  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum)) %>%
   merge(all_acreages_16, by = "reclass_cat") %>% 
   dplyr::select(!pointid_sum)
 
@@ -211,7 +212,7 @@ ag_acreage_16 <- summary_merge %>%
 
 # CO2e stored/urban tree canopy (metric tons/acre)
 
-tree_num <- 114.8730627
+tree_num <- 114.8730627/3.67 # convert Rincon provided numbers to MT Carbon
 
 # This may need to be hard coded - need to double check this cell reference is correct 
 urban_acres <- all_acreages_16[2, 2]

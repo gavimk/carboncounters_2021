@@ -1,0 +1,21 @@
+<PAMDataset>
+  <PAMRasterBand band="1">
+    <CategoryNames>
+      <Category></Category>
+      <Category>Barren</Category>
+      <Category>Developed</Category>
+      <Category>Fallow</Category>
+      <Category>Fodder</Category>
+      <Category>Forest</Category>
+      <Category>Grassland</Category>
+      <Category>Greenhouse</Category>
+      <Category>Orchard</Category>
+      <Category>Pastureland</Category>
+      <Category>Riparian/Wetland</Category>
+      <Category>Row Crop</Category>
+      <Category>Shrubland</Category>
+      <Category>Vineyard</Category>
+      <Category>Water</Category>
+    </CategoryNames>
+  </PAMRasterBand>
+</PAMDataset>
