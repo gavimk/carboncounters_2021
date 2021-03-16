@@ -1,4 +1,4 @@
-Landcover Classification,Total Aboveground Carbon (MT CO2e),Total Soil Carbon (MTCO2e),Total NO Emissions (MT CO2e),"Total Net, Stocks Minus Emissions (MTCO2e)",Acres
+Landcover Classification,Total Aboveground Carbon (MT C),Total Soil Carbon (MT C),Total NO Emissions (MT CO2e),Total Stocks (MT C),Acres
 Barren,0,90077.412474,0,90077.412474,22207.783543365455
 Developed,3372234.090304252,1356058.3923090007,0,4728292.4826132525,105836.17494440326
 Fallow,2293.47,94663.749231,18.450114215484735,96938.7691167845,8027.50185322461

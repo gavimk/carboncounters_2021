@@ -189,15 +189,15 @@ ci_summary_cat_16 <- all_clean_16_no_tree %>%
   dplyr::select(!pointid_sum)
 
 #ag acreages only
-ag_acres_calc_16 <- all_clean_16_no_tree %>% 
-  filter(source == "calag") %>% 
-  dplyr::select(!source) %>% 
-  group_by(reclass_cat) %>% 
-  summarize(pixels = n()) %>% 
-  mutate(sqmeter = pixels*900) %>% 
-  mutate(acreage = sqmeter/4047) %>% 
-  dplyr::select(! c(pixels, sqmeter)) %>% 
-  adorn_totals()
+# ag_acres_calc_16 <- all_clean_16_no_tree %>% 
+  # filter(source == "calag") %>% 
+  # dplyr::select(!source) %>% 
+  # group_by(reclass_cat) %>% 
+  # summarize(pixels = n()) %>% 
+  # mutate(sqmeter = pixels*900) %>% 
+  # mutate(acreage = sqmeter/4047) %>% 
+  # dplyr::select(! c(pixels, sqmeter)) %>% 
+  # adorn_totals()
 
 # another summary without landfire ag points to use for baseline
 # summary_merge <- all_clean_16_no_tree %>%
