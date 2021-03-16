@@ -58,7 +58,8 @@ precombin_df <- merge(lf_evc_16, lf_evh_16, by = "OBJECTID")
 
 lf_reclass_n <- read.csv(here::here("files", "luts", "lf_reclass_nitrogen.csv"), encoding = "UTF-8") %>% 
   clean_names() %>% 
-  rename(classnames_evt = x_u_feff_evt)
+  rename(classnames_evt = x_u_feff_evt) %>% 
+  rename(lf_n_category = n_category)
 
 combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>% 
   dplyr::select(OBJECTID, pointid, CLASSNAMES.x, CLASSNAMES.y, EVT_NAME,  Reclass_16) %>% 
@@ -187,25 +188,36 @@ ci_summary_cat_16 <- all_clean_16_no_tree %>%
   merge(all_acreages_16, by = "reclass_cat") %>% 
   dplyr::select(!pointid_sum)
 
-# another summary without landfire ag points to use for baseline
-summary_merge <- all_clean_16_no_tree %>%
+#ag acreages only
+ag_acres_calc_16 <- all_clean_16_no_tree %>% 
   filter(source == "calag") %>% 
   dplyr::select(!source) %>% 
-  group_by(reclass_cat) %>%
-  summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
-  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
-  merge(all_acreages_16, by = "reclass_cat") %>% 
-  dplyr::select(!pointid_sum)
+  group_by(reclass_cat) %>% 
+  summarize(pixels = n()) %>% 
+  mutate(sqmeter = pixels*900) %>% 
+  mutate(acreage = sqmeter/4047) %>% 
+  dplyr::select(! c(pixels, sqmeter)) %>% 
+  adorn_totals()
+
+# another summary without landfire ag points to use for baseline
+# summary_merge <- all_clean_16_no_tree %>%
+  # filter(source == "calag") %>% 
+  # dplyr::select(!source) %>% 
+  # group_by(reclass_cat) %>%
+  # summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
+  # mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
+  # merge(ag_acres_calc_16, by = "reclass_cat") %>% 
+  # dplyr::select(!pointid_sum)
 
 ####################################################################################
 # Now let's project agricultural land acreage and carbon to 2030
 
 # calculate same but filter for just ag to use for baseline projection (I know this is clunky, it's bc of how adorn_total works)
 # *NOTE* - do we want the LANDFIRE "Agriculture" category in here? In 2012 and 2019? I think we decided to not use it for baseline?
-ag_acreage_16 <- summary_merge %>%
-  filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Vineyard", "Greenhouse", "Pastureland")) %>% 
-  adorn_totals() %>% 
-  mutate(year = '2016')
+# ag_acreage_16 <- summary_merge %>%
+  # filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Vineyard", "Greenhouse", "Pastureland")) %>% 
+  # adorn_totals() %>% 
+  # mutate(year = '2016')
 
 # add in urban forestry aboveground #s and create row to add to dfs
 
@@ -227,8 +239,8 @@ ci_summary_cat_16 <- rbind(ci_summary_cat_16, tree_row) %>%
 
 # easier to rename columns after merges are done!
 
-colnames(ci_summary_cat_16) = c("Landcover Classification", "Total Aboveground Carbon (MT CO2e)", "Total Soil Carbon (MTCO2e)", "Total NO Emissions (MT CO2e)", "Total Net, Stocks Minus Emissions (MTCO2e)", "Acres")
-colnames(ag_acreage_16) = c("Landcover Classification", "Total Aboveground Carbon (MT CO2e)", "Total Soil Carbon (MTCO2e)", "Total NO Emissions (MT CO2e)", "Total Net, Stocks Minus Emissions (MTCO2e)", "Acres", "Year")
+colnames(ci_summary_cat_16) = c("Landcover Classification", "Total Aboveground Carbon (MT C)", "Total Soil Carbon (MT C)", "Total NO Emissions (MT CO2e)", "Total Stocks (MT C)", "Acres")
+colnames(ag_acreage_16) = c("Landcover Classification", "Total Aboveground Carbon (MT C)", "Total Soil Carbon (MT C)", "Total NO Emissions (MT CO2e)", "Total Stocks (MT C)", "Acres", "Year")
 
 # read in ag 2012 and 2019
 
@@ -261,9 +273,22 @@ ag_2012 <- ag_2012_raw %>%
   mutate(nitrogen = ifelse(ag_class == "Pastureland", "Field Crops", nitrogen)) %>% 
   mutate(source = ifelse(is.na(ag_class), "landfire", "calag"))
 
+ag_2016_update <- ag_2016_raw %>% 
+  dplyr::select(!c(organic, crop_list)) %>% 
+  rename(nitrogen = nitrogren_) %>% 
+  clean_names("snake") %>% 
+  rename(pointid = objectid) %>% 
+  mutate(ag_class = as.character(ag_class)) %>% 
+  mutate(nitrogen = as.character(nitrogen)) %>% 
+  mutate(nitrogen = ifelse(ag_class == "Barren / Fallow" | ag_class == "Greenhouse", 0, nitrogen)) %>% 
+  mutate(ag_class = ifelse(ag_class == "Irrigated Pasture",  "Fodder", as.character(ag_class))) %>% 
+  mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class))) %>% 
+  mutate(nitrogen = ifelse(ag_class == "Pastureland", "Field Crops", nitrogen)) %>% 
+  mutate(source = ifelse(is.na(ag_class), "landfire", "calag"))
+
 # create tables for 2012 and 2019
 
-ag_files_list <- list(ag_2012, ag_2019)
+ag_files_list <- list(ag_2012, ag_2016_update, ag_2019)
 
 # first, merge with LANDFIRE in case we want to keep LANDFIRE ag? It's an extra step but right now this is easier for me to code so I can just copy and paste
 fx_merge <- function(ag) {
@@ -279,7 +304,7 @@ fx_merge <- function(ag) {
 }
 
 results <- lapply(ag_files_list, fx_merge) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 # make into data frames
 
@@ -288,7 +313,7 @@ fx_df <- function(result){
 }
 
 dfs <- lapply(results, fx_df) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 # calculate stored carbon and nitrous oxide emissions for each pixel (900 sq m)
 
@@ -307,10 +332,10 @@ dfs %>%
 }
 
 ghgs <- lapply(dfs, fx_ghg_calc) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 ghg_dfs <- lapply(ghgs, fx_df) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 # add soil
 
@@ -324,14 +349,15 @@ ghg_dfs %>%
 }
 
 soil_results <- lapply(ghg_dfs, fx_soil) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 soil_results_dfs <- lapply(soil_results, fx_df) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 # name these just to have them
 combined_2012_df <- soil_results_dfs[[1]]
-combined_2019_df <- soil_results_dfs[[2]]
+combined_2016_df <- soil_results_dfs[[2]]
+combined_2019_df <- soil_results_dfs[[3]]
 
 
 fx_all_clean <- function(df) {
@@ -343,10 +369,10 @@ df %>%
 }
 
 summaries <- lapply(soil_results_dfs, fx_all_clean) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 summaries_dfs <- lapply(summaries, fx_df) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 names <- names(summaries_dfs)
 
@@ -364,7 +390,7 @@ loop_total_table <- soil_results_dfs[[i]] %>%
   mutate(acreage = sqmeter/4047) %>% 
   merge(summaries_dfs[[i]], by = "reclass_cat") %>%
   filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Pastureland", "Vineyard", "Greenhouse")) %>% 
-  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>% 
+  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum)) %>% 
   adorn_totals() %>% 
   mutate(year = i)
   
@@ -373,11 +399,12 @@ res_list[[i]] <- loop_total_table
   }
 
 total_tables <- lapply(res_list, fx_df) %>% 
-  setNames(c(2012, 2019))
+  setNames(c(2012, 2016, 2019))
 
 # and name them as objects
 
 ag_acreage_12 <- total_tables[[1]]
+ag_acreage_16 <- total_tables[[2]]
 ag_acreage_19 <- total_tables[[2]]
 
 # For ease of use, here are the most important outputs:

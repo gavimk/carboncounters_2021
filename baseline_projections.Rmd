@@ -62,8 +62,8 @@ range_weights <- c(range_grass, range_shrub)
 
 shrub_grass <- inventory %>% 
   filter(landcover_classification %in% c("Grassland","Shrubland")) %>% 
-  mutate(soil_avg = total_soil_carbon_mtco2e/acres) %>% 
-  mutate(abvg_avg = total_aboveground_carbon_mt_co2e/acres)
+  mutate(soil_avg = total_soil_carbon_mt_c/acres) %>% 
+  mutate(abvg_avg = total_aboveground_carbon_mt_c/acres)
   
 avg_soil_rangel <- weighted.mean(shrub_grass$soil_avg, range_weights)
 avg_abvg_rangel <- weighted.mean(shrub_grass$abvg_avg, range_weights)
