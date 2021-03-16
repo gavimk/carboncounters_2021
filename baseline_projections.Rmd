@@ -34,8 +34,7 @@ library(plotly)
 ag_12 <- read_csv(here::here("results", "ag_final_12.csv")) %>% 
   dplyr::select(! c(pixels, sqmeter))
 ag_16 <- read_csv(here::here("results", "ag_final_16.csv")) %>% 
-  clean_names()
-ag_16 <- ag_16[, c(1, 6, 2:5, 7)]
+  dplyr::select(! c(pixels, sqmeter))
 ag_19 <- read_csv(here::here("results", "ag_final_19.csv")) %>% 
   dplyr::select(! c(pixels, sqmeter))
 
@@ -43,13 +42,6 @@ colnames <- c("class", "acres","abvgc", "soilc", "noemit", "net", "year")
 colnames(ag_12) = colnames
 colnames(ag_16) = colnames
 colnames(ag_19) = colnames
-
-average_12 <- ag_12 %>% 
-  mutate(avg = abvgc/acres)
-average_16 <- ag_16 %>% 
-  mutate(avg = abvgc/acres)
-average_19 <- ag_19 %>% 
-  mutate(avg = abvgc/acres)
 
 #Add in rangeland values from cal ag
 
@@ -69,8 +61,8 @@ range_weights <- c(range_grass, range_shrub)
 
 shrub_grass <- inventory %>% 
   filter(landcover_classification %in% c("Grassland","Shrubland")) %>% 
-  mutate(soil_avg = total_soil_carbon_mtco2e/acres) %>% 
-  mutate(abvg_avg = total_aboveground_carbon_mt_co2e/acres)
+  mutate(soil_avg = total_soil_carbon_mt_c/acres) %>% 
+  mutate(abvg_avg = total_aboveground_carbon_mt_c/acres)
   
 avg_soil_rangel <- weighted.mean(shrub_grass$soil_avg, range_weights)
 avg_abvg_rangel <- weighted.mean(shrub_grass$abvg_avg, range_weights)
