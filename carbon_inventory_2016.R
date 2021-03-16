@@ -407,6 +407,7 @@ ag_acreage_12 <- total_tables[[1]]
 ag_acreage_16 <- total_tables[[2]]
 ag_acreage_19 <- total_tables[[3]]
 
+
 # For ease of use, here are the most important outputs:
 
 ci_summary_cat_16 #this is the full carbon inventory for 2016: contains acreage, soil carbon, aboveground carbon, and NO for all categories
