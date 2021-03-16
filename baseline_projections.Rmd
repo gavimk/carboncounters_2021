@@ -43,6 +43,15 @@ colnames(ag_12) = colnames
 colnames(ag_16) = colnames
 colnames(ag_19) = colnames
 
+avg_12 <- ag_12 %>% 
+  mutate(avg = abvgc/acres)
+
+avg_16 <- ag_16 %>% 
+  mutate(avg = abvgc/acres)
+
+avg_19 <- ag_19 %>% 
+  mutate(avg = abvgc/acres)
+
 #Add in rangeland values from cal ag
 
 # First, use carbon inventory to get average carbon values per acre

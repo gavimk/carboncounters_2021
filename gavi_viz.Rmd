@@ -59,7 +59,7 @@ library(ggforce)
 library(rasterize)
 ```
 
-```{r}
+```{r,cache=TRUE}
 
 # Set up
 
@@ -179,7 +179,7 @@ inventory_16 <- read_csv(here("results", "inventory_16.csv")) %>%
   clean_names()
 
 inventory_stocks <- inventory_16 %>% 
-  mutate(total_stocks = total_soil_carbon_mtco2e + total_aboveground_carbon_mt_co2e) 
+  mutate(total_stocks = total_stocks_mt_c) 
 
 tstock_plot_predict <- ag_predictions %>% 
   mutate(land_class = str_to_title(land_class)) %>% 
