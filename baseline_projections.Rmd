@@ -34,8 +34,7 @@ library(plotly)
 ag_12 <- read_csv(here::here("results", "ag_final_12.csv")) %>% 
   dplyr::select(! c(pixels, sqmeter))
 ag_16 <- read_csv(here::here("results", "ag_final_16.csv")) %>% 
-  clean_names()
-ag_16 <- ag_16[, c(1, 6, 2:5, 7)]
+  dplyr::select(! c(pixels, sqmeter))
 ag_19 <- read_csv(here::here("results", "ag_final_19.csv")) %>% 
   dplyr::select(! c(pixels, sqmeter))
 
