@@ -184,7 +184,7 @@ ci_summary_cat_16 <- all_clean_16_no_tree %>%
   dplyr::select(!source) %>% 
   group_by(reclass_cat) %>%
   summarise_all(.funs = c(sum="sum"), na.rm = TRUE) %>%
-  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum - emit_no_mtco2e_pix_sum)) %>%
+  mutate(net = (stock_soilc_mtco2e_pix_sum + stock_abvgc_mtco2e_pixel_sum)) %>%
   merge(all_acreages_16, by = "reclass_cat") %>% 
   dplyr::select(!pointid_sum)
 

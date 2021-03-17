@@ -172,6 +172,16 @@ writeRaster(rast_abvgc, "aboveground_raster.tif", overwrite = TRUE)
 writeRaster(rast_soilc, "soil_raster.tif", overwrite = TRUE)
 writeRaster(rast_n2o, "n2o_raster.tif", overwrite = TRUE)
 
+class_df <- rasterToPoints(rast_landclass_fact) %>% 
+  as.data.frame()
+
+ggplot() +
+  geom_raster(data = class_df,
+              aes(x = x,
+              y = y,
+              fill = layer)) +
+  theme_minimal()
+
 # grid <- st_bbox(all_coord_clean)
 
 # add - as("Spatial") - transform from SF to spatial (spatial points)
