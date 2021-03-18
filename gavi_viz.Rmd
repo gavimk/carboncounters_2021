@@ -491,14 +491,14 @@ updt_plot_n2o <- ggplot() +
        x = "Year",
        title = "Nitrous Oxide Emissions by Land Class") +
   scale_y_continuous(labels = scales::comma) +
-  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30")) +
-  theme(plot.title = element_text(hjust = 0.5, size = 28, margin=margin(0,0,40,0), family="Times", face="plain"),
-        axis.text.x = element_text(size = 18, angle = 0, hjust = .5, vjust = .5, family="Times", face="plain"),
-        axis.text.y = element_text(size = 18, angle = 0, hjust = 1, vjust = 0, family="Times", face="plain"),  
-        axis.title.x = element_text(size = 22, angle = 0, hjust = .5, vjust = 0, margin=margin(15,0,0,0), family="Times", face="plain"),
-        axis.title.y = element_text(size = 22, angle = 90, hjust = .5, vjust = .5, margin=margin(0,15,0,0), family="Times", face="plain"),
-        legend.text = element_text(size = 22, margin=margin(0,0,10,0), family="Times", face="plain"),
-        legend.title = element_text(size = 26, family="Times", face="plain"))
+  scale_x_continuous(breaks = c(2012, 2016, 2019, 2030), labels = c("'12", "'16", "'19", "'30")) 
+  #theme(plot.title = element_text(hjust = 0.5, size = 28, margin=margin(0,0,40,0), family="Times", face="plain"),
+        # axis.text.x = element_text(size = 18, angle = 0, hjust = .5, vjust = .5, family="Times", face="plain"),
+        # axis.text.y = element_text(size = 18, angle = 0, hjust = 1, vjust = 0, family="Times", face="plain"),  
+        # axis.title.x = element_text(size = 22, angle = 0, hjust = .5, vjust = 0, margin=margin(15,0,0,0), family="Times", face="plain"),
+        # axis.title.y = element_text(size = 22, angle = 90, hjust = .5, vjust = .5, margin=margin(0,15,0,0), family="Times", face="plain"),
+        # legend.text = element_text(size = 22, margin=margin(0,0,10,0), family="Times", face="plain"),
+        # legend.title = element_text(size = 26, family="Times", face="plain"))
 
 updt_plot_n2o
 ggsave(here("alicia", "n2o.jpg"), height = 8, width = 13)

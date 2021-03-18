@@ -75,23 +75,6 @@ combined_lf_df <- merge(precombin_df, lf_evt_16, by = "OBJECTID") %>%
   dplyr::select(-reclass_16) %>% 
   rename(reclass_16 = reclass_category)
 
-# remove NAs - code no longer needed, updated csv's reflect that we updated groups that showed up as NA
-
-# is_na <- combined_lf_df %>% 
-#   filter(is.na(evt_group)) %>% 
-#   select(classnames_evt)
-
-# find missing values
-
-# is_na_unique <- unique(is_na$classnames_evt)
-
-# make dataframe of missing values - COME BACK TO THIS
-
-# is_na_unique <- data.frame(is_na_unique)
-# write_csv(is_na_unique, here::here("files", "natlands", "missing_classnames_evt.csv"))
-
-# missing_names_evt <- read.csv(here::here("files", "natlands", "missing_classnames_evt.csv"))
-
 ###############################################################
 # Add agricultural lands
 ###############################################################
@@ -110,6 +93,7 @@ ag_2016 <- ag_2016_raw %>%
   mutate(nitrogen = ifelse(ag_class == "Barren / Fallow" | ag_class == "Greenhouse", 0, nitrogen)) %>% 
   mutate(ag_class = ifelse(ag_class == "Irrigated Pasture",  "Fodder", as.character(ag_class))) %>% 
   mutate(ag_class = ifelse(ag_class == "Barren / Fallow",  "Fallow", as.character(ag_class))) %>% 
+  mutate(nitrogen = ifelse(ag_class == "Pastureland", "Field Crops", nitrogen)) %>% 
   mutate(source = ifelse(is.na(ag_class), "landfire", "calag"))
 
 # merge natural lands with ag, replace grouped name with ag classification where appropriate
@@ -125,7 +109,7 @@ combined_ag_natland <- merge(combined_lf_df, ag_2016, by = "pointid") %>%
   rename(nitrogen_cat = nitrogen) %>% 
   mutate(reclass_cat = ifelse(reclass_cat == "Wetland",  "Riparian/Wetland", as.character(reclass_cat))) %>% 
   mutate(reclass_cat = ifelse(reclass_cat == "Irrigated Pasture",  "Fodder", as.character(reclass_cat))) %>% 
-  mutate(nitrogen_cat = ifelse(lf_n_category != "", as.character(lf_n_category), as.character(nitrogen_cat)))
+  mutate(nitrogen_cat = ifelse(source == "calag", as.character(nitrogen_cat), as.character(lf_n_category)))
 
 # simplified file to use in GIS
 reclass_map_file <- combined_ag_natland %>% 
@@ -153,23 +137,13 @@ all_c_n_soil <- merge(ag_natland_carbon_n_16, soil, by = "pointid") %>%
   mutate(soilMT = (soil900/1000000)) %>%  # grams to metric tons of organic carbon
   mutate(stock_soilc_mtco2e_pix = soilMT*1) # convert to CO2e # Decided to report as MT instead, replace 3.67 value w 1 to not break rest of code
   
-# okay...let's see if we can make a nice table somehow
+# make into a table
 
 all_clean_16_no_tree <- all_c_n_soil %>% 
   dplyr::select(pointid, reclass_cat, stock_abvgc_mtco2e_pixel, stock_soilc_mtco2e_pix, emit_no_mtco2e_pix, source) %>% 
   mutate(emit_no_mtco2e_pix = replace_na(emit_no_mtco2e_pix, 0))
 
-# total_abvg_c_16 <- comma(sum(all_clean_16_no_tree$stock_abvgc_mtco2e_pixel, na.rm = TRUE))
-# 
-# total_soilc_16 <- comma(sum(all_clean_16_no_tree$stock_soilc_mtco2e_pix, na.rm = TRUE))
-# 
-# total_no_16 <- comma(sum(all_clean_16_no_tree$emit_no_mtco2e_pix, na.rm = TRUE))
-# 
-# total_net_16 <- (comma(total_abvg_c_16 + total_soilc_16 - total_no_16))
-# 
-# ci_summary_nocat_16 <- data.frame(total_abvg_c_16, total_soilc_16, total_no_16, total_net_16)
-
-# this one below is really not necessary - can remove later after checking I didn't use it for something else
+# calculate acreages
 
 all_acreages_16 <- all_clean_16_no_tree %>% 
   group_by(reclass_cat) %>% 
@@ -209,23 +183,13 @@ ci_summary_cat_16 <- all_clean_16_no_tree %>%
   # merge(ag_acres_calc_16, by = "reclass_cat") %>% 
   # dplyr::select(!pointid_sum)
 
-####################################################################################
-# Now let's project agricultural land acreage and carbon to 2030
-
-# calculate same but filter for just ag to use for baseline projection (I know this is clunky, it's bc of how adorn_total works)
-# *NOTE* - do we want the LANDFIRE "Agriculture" category in here? In 2012 and 2019? I think we decided to not use it for baseline?
-# ag_acreage_16 <- summary_merge %>%
-  # filter(reclass_cat %in% c("Fallow", "Fodder", "Orchard", "Row Crop", "Vineyard", "Greenhouse", "Pastureland")) %>% 
-  # adorn_totals() %>% 
-  # mutate(year = '2016')
-
 # add in urban forestry aboveground #s and create row to add to dfs
 
 # CO2e stored/urban tree canopy (metric tons/acre)
 
 tree_num <- 114.8730627/3.67
 
-# This may need to be hard coded - need to double check this cell reference is correct 
+# If making changes, double check this cell reference is correct (should reference "developed")
 urban_acres <- all_acreages_16[2, 2]
  
 tree_row <-data.frame("Urban Forestry (Aboveground Only)", tree_num*urban_acres, 0, 0, tree_num*urban_acres, 0)
@@ -240,7 +204,12 @@ ci_summary_cat_16 <- rbind(ci_summary_cat_16, tree_row) %>%
 # easier to rename columns after merges are done!
 
 colnames(ci_summary_cat_16) = c("Landcover Classification", "Total Aboveground Carbon (MT C)", "Total Soil Carbon (MT C)", "Total NO Emissions (MT CO2e)", "Total Stocks (MT C)", "Acres")
-colnames(ag_acreage_16) = c("Landcover Classification", "Total Aboveground Carbon (MT C)", "Total Soil Carbon (MT C)", "Total NO Emissions (MT CO2e)", "Total Stocks (MT C)", "Acres", "Year")
+#colnames(ag_acreage_16) = c("Landcover Classification", "Total Aboveground Carbon (MT C)", "Total Soil Carbon (MT C)", "Total NO Emissions (MT CO2e)", "Total Stocks (MT C)", "Acres", "Year")
+
+
+###############################################################
+# Process dataframes to use in baseline projections
+###############################################################
 
 # read in ag 2012 and 2019
 
@@ -286,7 +255,7 @@ ag_2016_update <- ag_2016_raw %>%
   mutate(nitrogen = ifelse(ag_class == "Pastureland", "Field Crops", nitrogen)) %>% 
   mutate(source = ifelse(is.na(ag_class), "landfire", "calag"))
 
-# create tables for 2012 and 2019
+# create tables for 2012, 2016, 2019
 
 ag_files_list <- list(ag_2012, ag_2016_update, ag_2019)
 
@@ -431,3 +400,5 @@ write_csv(reclass_map_file, here::here("results", "reclass_map_file.csv"))
 
 # for mapping in R
 write_csv(all_clean_16_no_tree, here("results", "all_points_values.csv"))
+
+check <- data.frame(results[[2]])
