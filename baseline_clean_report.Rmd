@@ -1,13 +1,16 @@
 ---
 title: "Baseline Reference Scenario - Prepared in R Studio"
 author: "Carbon Counters"
-date: "3/19/2021"
+date: "3/18/2021"
 output: word_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, cache = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, cache.lazy = FALSE)
 ```
+
+## Code Setup
+
 
 ```{r}
 
@@ -23,11 +26,7 @@ library(stargazer)
 library(broom)
 library(plotly)
 
-```
-
-
-```{r}
-# Read in data files and clean up, created in carbon inventory script. These files contain # of acres of each ag class according to calag (no landfire). 
+# Read in data files and clean up, created in carbon inventory script. These files contain # of acres of each ag class according to calag (excludes landfire). 
 
 ag_12 <- read_csv(here::here("results", "ag_final_12.csv")) %>% 
   dplyr::select(! c(pixels, sqmeter))
@@ -36,19 +35,11 @@ ag_16 <- read_csv(here::here("results", "ag_final_16.csv")) %>%
 ag_19 <- read_csv(here::here("results", "ag_final_19.csv")) %>% 
   dplyr::select(! c(pixels, sqmeter))
 
+# change column names
 colnames <- c("class", "acres","abvgc", "soilc", "noemit", "net", "year")
 colnames(ag_12) = colnames
 colnames(ag_16) = colnames
 colnames(ag_19) = colnames
-
-avg_12 <- ag_12 %>% 
-  mutate(avg = abvgc/acres)
-
-avg_16 <- ag_16 %>% 
-  mutate(avg = abvgc/acres)
-
-avg_19 <- ag_19 %>% 
-  mutate(avg = abvgc/acres)
 
 #Add in rangeland values from cal ag
 
@@ -62,30 +53,35 @@ range_acre_19 <- 573678
 range_acre_12 <- 584125
 range_acre_16 <- 586047
 
-range_grass <- 234716.086
-range_shrub <- 586047 - 234716.086
+# assign total # of grassland acres from carbon inventory, then subtract from rangeland acreage to get shrubland weight
+range_grass <- 239987.991
+range_shrub <- range_acre_16 - range_grass
 range_weights <- c(range_grass, range_shrub)
 
+# get average aboveground and soil carbon storage per acre of grassland and shrubland
 shrub_grass <- inventory %>% 
   filter(landcover_classification %in% c("Grassland","Shrubland")) %>% 
   mutate(soil_avg = total_soil_carbon_mt_c/acres) %>% 
   mutate(abvg_avg = total_aboveground_carbon_mt_c/acres)
-  
+
+# calculate average aboveground and soil carbon for rangeland
 avg_soil_rangel <- weighted.mean(shrub_grass$soil_avg, range_weights)
 avg_abvg_rangel <- weighted.mean(shrub_grass$abvg_avg, range_weights)
 
+# prepare rows to add to ag inventories
 range_data <- data.frame(class = "Rangeland", "acres" = c(range_acre_12, range_acre_16, range_acre_19), "abvgc" = 0, "soilc" = 0, "noemit" = 0, "net" = 0, "year" = c(2012, 2016, 2019)) %>% 
   mutate(abvgc = avg_abvg_rangel*acres) %>% 
   mutate(soilc = avg_soil_rangel*acres) %>% 
   mutate(net = abvgc+soilc)
 
-# make big dataframe to make calculations easier
+# make combined dataframe to make calculations easier
 
 all_ag_df <- rbind(ag_12, ag_16) %>% 
   rbind(ag_19) %>% 
   rbind(range_data) %>% 
   filter(class != "Total") 
 
+# calculate per acre storage and nitrous oxide emissions
 best_at <- all_ag_df %>% 
   filter(year == 2016) %>%
   mutate(best_abvg = (abvgc/acres)) %>%
@@ -93,8 +89,7 @@ best_at <- all_ag_df %>%
   mutate(best_overall = ((abvgc+soilc)/acres)) %>%
   mutate(worst_n2o = (noemit/acres))
 
-write_csv(best_at, here("results", "best_storage.csv"))
-
+# wide format dataframe
 all_ag_df_wide <- all_ag_df %>% 
   pivot_wider(names_from = class,
               values_from = c(acres, abvgc, soilc, noemit, net)) %>% 
@@ -102,7 +97,7 @@ all_ag_df_wide <- all_ag_df %>%
 
 ```
 
-
+## Run linear regressions
 ```{r}
 
 ## First, we'll make a data frame of years out to 2030
@@ -159,12 +154,9 @@ for (name in ag_names) {
   
 }
 
-res_list_plots[[name]] <- plot
-
-res_list_plots
-
 ```
 
+## Clean and prepare results for use
 ```{r}
 
 #create big dataframe of all predicted values (same units), easier for doing visualizations
@@ -197,9 +189,6 @@ totals_predict <- tidy_predict_df %>%
 # put it together
 final_predict_df <- bind_rows(tidy_predict_df, totals_predict)
 
-# save as csv
-write_csv(final_predict_df, here("results", "all_predictions.csv"))
-
 # do the same for observed values
 
 tidy_observed <- all_ag_df %>% 
@@ -216,14 +205,6 @@ totals_observed <- tidy_observed %>%
   relocate(year, variable, land_class, value)
 
 final_observed_df <- bind_rows(tidy_observed, totals_observed)
-
-write_csv(final_observed_df, here("results", "all_ag_observations.csv"))
-
-write_csv(final_predict_df, here("results", "all_ag_predictions.csv"))
-
-write_csv(all_predict_df, here("results", "predictions_wide.csv"))
-
-write_csv(all_ag_df_wide, here("results", "observed_wide.csv"))
 
 ```
 
